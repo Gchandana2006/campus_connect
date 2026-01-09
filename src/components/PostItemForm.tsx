@@ -18,11 +18,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { CalendarIcon, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import { categories, locations } from '@/lib/types';
 import { analyzeImageAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +32,7 @@ const itemSchema = z.object({
   category: z.string().min(1, "Please select a category."),
   description: z.string().min(10, "Description must be at least 10 characters.").max(500, "Description is too long."),
   location: z.string().min(1, "Please select a location."),
-  date: z.date({ required_error: "Please select a date." }),
+  date: z.string().min(1, "Please enter a date."),
 });
 
 type ItemFormValues = z.infer<typeof itemSchema>;
@@ -52,6 +49,7 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
     defaultValues: {
       name: '',
       description: '',
+      date: '',
     },
   });
 
@@ -231,39 +229,11 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
                 control={form.control}
                 name="date"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col md:col-span-2">
+                  <FormItem className="md:col-span-2">
                     <FormLabel>Date when the item was Lost or Found</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Input placeholder="e.g., July 25, 2024" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
