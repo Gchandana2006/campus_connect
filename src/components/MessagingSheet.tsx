@@ -16,6 +16,8 @@ import { Send, MessageSquare } from 'lucide-react';
 import type { Item } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ScrollArea } from './ui/scroll-area';
+import { useUser } from '@/firebase';
+import Link from 'next/link';
 
 interface MessagingSheetProps {
   item: Item;
@@ -31,14 +33,26 @@ const mockMessages = [
 ];
 
 export function MessagingSheet({ item }: MessagingSheetProps) {
+  const { user } = useUser();
   const buttonText = item.status === 'Lost' ? 'Contact Finder' : 'Contact Owner';
+
+  if (!user) {
+    return (
+      <Button asChild className="w-full">
+        <Link href="/login">
+          <MessageSquare className="mr-2 h-4 w-4" />
+          Log in to {buttonText}
+        </Link>
+      </Button>
+    );
+  }
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button className="w-full">
+        <Button className="w-full" disabled={user?.uid === item.user.id}>
           <MessageSquare className="mr-2 h-4 w-4" />
-          {buttonText}
+          {user?.uid === item.user.id ? "This is your item" : buttonText}
         </Button>
       </SheetTrigger>
       <SheetContent className="flex flex-col">

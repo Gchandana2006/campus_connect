@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +11,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { PostItemForm } from './PostItemForm';
+import { useUser } from '@/firebase';
 
 export function PostItemDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { user } = useUser();
+
+  if (!user) {
+    return (
+        <Button asChild>
+            <Link href="/login">
+                {children}
+            </Link>
+        </Button>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

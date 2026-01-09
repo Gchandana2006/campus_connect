@@ -10,6 +10,7 @@ export type Item = {
     imageUrl: string;
     imageHint: string;
     user: {
+      id: string;
       name: string;
       avatarUrl: string;
     };

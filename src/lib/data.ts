@@ -13,7 +13,7 @@ export const items: Item[] = [
     location: 'Library',
     imageUrl: placeholderImages.find(img => img.id === 'lost-phone')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'lost-phone')?.imageHint || '',
-    user: { name: 'Alice', avatarUrl: 'https://picsum.photos/seed/user1/40/40' },
+    user: { id: 'user1', name: 'Alice', avatarUrl: 'https://picsum.photos/seed/user1/40/40' },
   },
   {
     id: '2',
@@ -25,7 +25,7 @@ export const items: Item[] = [
     location: 'Cafeteria',
     imageUrl: placeholderImages.find(img => img.id === 'found-keys')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'found-keys')?.imageHint || '',
-    user: { name: 'Bob', avatarUrl: 'https://picsum.photos/seed/user2/40/40' },
+    user: { id: 'user2', name: 'Bob', avatarUrl: 'https://picsum.photos/seed/user2/40/40' },
   },
   {
     id: '3',
@@ -37,7 +37,7 @@ export const items: Item[] = [
     location: 'Classroom',
     imageUrl: placeholderImages.find(img => img.id === 'lost-notebook')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'lost-notebook')?.imageHint || '',
-    user: { name: 'Charlie', avatarUrl: 'https://picsum.photos/seed/user3/40/40' },
+    user: { id: 'user3', name: 'Charlie', avatarUrl: 'https://picsum.photos/seed/user3/40/40' },
   },
   {
     id: '4',
@@ -49,7 +49,7 @@ export const items: Item[] = [
     location: 'Sports Complex',
     imageUrl: placeholderImages.find(img => img.id === 'found-id')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'found-id')?.imageHint || '',
-    user: { name: 'Eve', avatarUrl: 'https://picsum.photos/seed/user4/40/40' },
+    user: { id: 'user4', name: 'Eve', avatarUrl: 'https://picsum.photos/seed/user4/40/40' },
   },
   {
     id: '5',
@@ -61,7 +61,7 @@ export const items: Item[] = [
     location: 'Library',
     imageUrl: placeholderImages.find(img => img.id === 'lost-headphones')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'lost-headphones')?.imageHint || '',
-    user: { name: 'Frank', avatarUrl: 'https://picsum.photos/seed/user5/40/40' },
+    user: { id: 'user5', name: 'Frank', avatarUrl: 'https://picsum.photos/seed/user5/40/40' },
   },
   {
     id: '6',
@@ -73,7 +73,7 @@ export const items: Item[] = [
     location: 'Cafeteria',
     imageUrl: placeholderImages.find(img => img.id === 'found-hoodie')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'found-hoodie')?.imageHint || '',
-    user: { name: 'Grace', avatarUrl: 'https://picsum.photos/seed/user6/40/40' },
+    user: { id: 'user6', name: 'Grace', avatarUrl: 'https://picsum.photos/seed/user6/40/40' },
   },
   {
     id: '7',
@@ -85,7 +85,7 @@ export const items: Item[] = [
     location: 'Sports Complex',
     imageUrl: placeholderImages.find(img => img.id === 'resolved-bottle')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'resolved-bottle')?.imageHint || '',
-    user: { name: 'Heidi', avatarUrl: 'https://picsum.photos/seed/user7/40/40' },
+    user: { id: 'user7', name: 'Heidi', avatarUrl: 'https://picsum.photos/seed/user7/40/40' },
   },
   {
     id: '8',
@@ -97,6 +97,6 @@ export const items: Item[] = [
     location: 'Hostel',
     imageUrl: placeholderImages.find(img => img.id === 'lost-airpods-case')?.imageUrl || '',
     imageHint: placeholderImages.find(img => img.id === 'lost-airpods-case')?.imageHint || '',
-    user: { name: 'Ivan', avatarUrl: 'https://picsum.photos/seed/user8/40/40' },
+    user: { id: 'user8', name: 'Ivan', avatarUrl: 'https://picsum.photos/seed/user8/40/40' },
   },
 ];
