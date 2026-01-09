@@ -21,11 +21,10 @@ import { Loader2, Upload, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-// Firebase Storage is not available in this environment.
-// We will encode the image as a Base64 data URI and store it in the user's profile.
-// To avoid "photoURL too long" errors, we'll resize the image client-side.
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB limit for initial upload
-const AVATAR_DIMENSION = 256; // Resize to 256x256 pixels
+const AVATAR_DIMENSION = 128; // Resize to 128x128 pixels
+const JPEG_QUALITY = 0.8; // Use 80% quality
+const MAX_DATA_URI_LENGTH = 32000; // Firebase photoURL limit is ~32KB
 
 export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -51,14 +50,18 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
           canvas.width = AVATAR_DIMENSION;
           canvas.height = AVATAR_DIMENSION;
           
-          // Draw the image scaled and centered
           const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
           const x = (canvas.width / 2) - (img.width / 2) * scale;
           const y = (canvas.height / 2) - (img.height / 2) * scale;
           ctx!.drawImage(img, x, y, img.width * scale, img.height * scale);
 
-          // Get the resized image as a data URI
-          resolve(canvas.toDataURL(file.type));
+          const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+
+          if (dataUrl.length > MAX_DATA_URI_LENGTH) {
+            reject(new Error('Resized image is still too large. Please try a different image.'));
+          } else {
+            resolve(dataUrl);
+          }
         };
         img.onerror = reject;
       };
@@ -80,16 +83,19 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
     }
 
     try {
+        setIsLoading(true);
         const resizedDataUrl = await resizeImage(file);
         setImagePreview(resizedDataUrl);
-    } catch (error) {
-        console.error("Image resizing failed:", error);
+    } catch (error: any) {
+        console.error("Image processing failed:", error);
         toast({
             variant: "destructive",
             title: "Error processing image",
-            description: "Could not process the selected image. Please try another one.",
+            description: error.message || "Could not process the selected image. Please try another one.",
         });
         setImagePreview(null);
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -105,7 +111,6 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
 
     setIsLoading(true);
     try {
-      // The imagePreview is the resized data URI
       await updateProfile(user, { photoURL: imagePreview });
       toast({
         title: 'Profile Picture Updated!',
@@ -127,7 +132,6 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
   
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // Reset state when dialog closes
       setImagePreview(null);
     }
     setOpen(isOpen);
@@ -140,17 +144,21 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Upload a new image. It will be resized to {AVATAR_DIMENSION}x{AVATAR_DIMENSION} pixels.
+            Upload a new image. It will be resized and optimized for your profile.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           <div className="flex justify-center">
             <div 
-              className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-2 border-dashed"
-              onClick={() => fileInputRef.current?.click()}
+              className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-2 border-dashed relative"
             >
-              {imagePreview ? (
+              {isLoading && (
+                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+              )}
+              {!isLoading && (imagePreview ? (
                 <Image 
                   src={imagePreview} 
                   alt="Avatar preview" 
@@ -160,15 +168,14 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
                 />
               ) : (
                 <Camera className="h-10 w-10 text-muted-foreground" />
-              )}
+              ))}
             </div>
           </div>
 
-
           <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload
+                  Choose Image
               </Button>
               <Button variant="outline" disabled>
                   <Camera className="mr-2 h-4 w-4" />
@@ -181,6 +188,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
             className="hidden" 
             accept="image/png, image/jpeg, image/gif"
             onChange={handleFileSelect}
+            disabled={isLoading}
           />
         </div>
 
