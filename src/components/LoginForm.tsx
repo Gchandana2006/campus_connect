@@ -61,14 +61,22 @@ export function LoginForm() {
     } catch (error: any) {
       console.error('Login error:', error);
 
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         setShowForgotPassword(true);
         toast({
           variant: 'destructive',
           title: 'Login Failed',
-          description: 'Incorrect email or password.',
+          description: 'Incorrect password.',
         });
-      } else {
+      } else if (error.code === 'auth/user-not-found') {
+        setShowForgotPassword(false);
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: 'No account found with this email.',
+        });
+      }
+      else {
         toast({
           variant: 'destructive',
           title: 'Login Failed',
