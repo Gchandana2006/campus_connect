@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "lost-phone",
+      "description": "A smartphone lying on a wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1675752520743-c449b6f9341a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzbWFydHBob25lJTIwc2NyZWVufGVufDB8fHx8MTc2NzkyMTAzN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "smartphone screen"
+    },
+    {
+      "id": "found-keys",
+      "description": "A set of keys on a table.",
+      "imageUrl": "https://images.unsplash.com/photo-1609587415882-97552f39c6c2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxrZXlzfGVufDB8fHx8MTc2Nzg1MDU2MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "keys"
+    },
+    {
+      "id": "lost-notebook",
+      "description": "A spiral notebook and a pen.",
+      "imageUrl": "https://images.unsplash.com/photo-1698434401311-4d9ef9ac9c7f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxub3RlYm9vayUyMHBlbnxlbnwwfHx8fDE3Njc4ODkyODl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "notebook pen"
+    },
+    {
+      "id": "found-id",
+      "description": "A generic ID card.",
+      "imageUrl": "https://images.unsplash.com/photo-1637070155805-e6fbee6ec2cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxJRCUyMGNhcmR8ZW58MHx8fHwxNzY3ODgyNDU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ID card"
+    },
+    {
+      "id": "lost-headphones",
+      "description": "A pair of wireless headphones.",
+      "imageUrl": "https://images.unsplash.com/photo-1484704849700-f032a568e944?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxoZWFkcGhvbmVzfGVufDB8fHx8MTc2Nzg3MzU4OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "headphones"
+    },
+    {
+      "id": "found-hoodie",
+      "description": "A folded black hoodie.",
+      "imageUrl": "https://images.unsplash.com/photo-1647797819874-f51a8a8fc5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxibGFjayUyMGhvb2RpZXxlbnwwfHx8fDE3Njc4NjExNTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "black hoodie"
+    },
+    {
+      "id": "resolved-bottle",
+      "description": "A metal water bottle.",
+      "imageUrl": "https://images.unsplash.com/photo-1553564552-02656d6a2390?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx3YXRlciUyMGJvdHRsZXxlbnwwfHx8fDE3Njc5MDI2Njl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "water bottle"
+    },
+    {
+      "id": "lost-airpods-case",
+      "description": "An AirPods charging case.",
+      "imageUrl": "https://images.unsplash.com/photo-1706289835533-3cb1956beeb3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxlYXJidWRzJTIwY2FzZXxlbnwwfHx8fDE3Njc5MjExNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "earbuds case"
+    }
+  ]
 }
