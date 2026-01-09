@@ -4,21 +4,10 @@
 import {
   generateItemDetailsFromImage,
   type GenerateItemDetailsFromImageInput,
+  type GenerateItemDetailsFromImageOutput,
 } from '@/ai/flows/generate-item-details-from-image';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { initializeApp, getApps } from 'firebase/app';
-import { firebaseConfig } from '@/firebase/config';
 
-// Helper to initialize Firebase on the server for actions
-function initializeFirebaseForActions() {
-    if (getApps().length === 0) {
-        return initializeApp(firebaseConfig);
-    }
-    return getApps()[0];
-}
-
-
-export async function analyzeImageAction(input: GenerateItemDetailsFromImageInput) {
+export async function analyzeImageAction(input: GenerateItemDetailsFromImageInput): Promise<{ success: boolean, data?: GenerateItemDetailsFromImageOutput, error?: string }> {
   try {
     const result = await generateItemDetailsFromImage(input);
     return { success: true, data: result };
@@ -27,35 +16,4 @@ export async function analyzeImageAction(input: GenerateItemDetailsFromImageInpu
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return { success: false, error: `Failed to analyze image. ${errorMessage}` };
   }
-}
-
-export type PostItemInput = {
-    name: string;
-    status: 'Lost' | 'Found';
-    category: string;
-    description: string;
-    location: string;
-    date: string;
-    userId: string;
-    imageUri: string;
-};
-
-export async function postItemAction(input: PostItemInput) {
-    try {
-        const app = initializeFirebaseForActions();
-        const firestore = getFirestore(app);
-        
-        await addDoc(collection(firestore, 'items'), {
-            ...input,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-
-        return { success: true };
-
-    } catch (error) {
-        console.error('Error posting item:', error);
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { success: false, error: `Failed to post item. ${errorMessage}` };
-    }
 }

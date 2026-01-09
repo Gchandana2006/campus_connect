@@ -19,11 +19,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import { categories, locations } from '@/lib/types';
-import { analyzeImageAction, postItemAction } from '@/app/actions';
+import { analyzeImageAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { ScrollArea } from './ui/scroll-area';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const itemSchema = z.object({
   name: z.string().min(3, "Item name must be at least 3 characters."),
@@ -38,12 +39,14 @@ type ItemFormValues = z.infer<typeof itemSchema>;
 
 export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageHint, setImageHint] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useUser();
+  const firestore = useFirestore();
 
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -89,7 +92,7 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
         form.setValue('description', result.data.description, { shouldValidate: true });
         if (result.data.suggestedCategories.length > 0) {
             setSuggestedCategories(result.data.suggestedCategories);
-            // Auto-select the first suggested category if it exists in our list
+            setImageHint(result.data.suggestedCategories.slice(0, 2).join(' '));
             const matchedCategory = categories.find(c => result.data.suggestedCategories.includes(c));
             if (matchedCategory) {
                 form.setValue('category', matchedCategory, { shouldValidate: true });
@@ -116,23 +119,42 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
         toast({ variant: 'destructive', title: 'Image required', description: 'Please upload an image of the item.' });
         return;
     }
+    if (!firestore) {
+        toast({ variant: 'destructive', title: 'Database not available', description: 'Could not connect to the database.' });
+        return;
+    }
 
     setIsSubmitting(true);
-    const result = await postItemAction({ ...data, userId: user.uid, imageUri: imagePreview });
-    setIsSubmitting(false);
+    try {
+        await addDoc(collection(firestore, 'items'), {
+            ...data,
+            userId: user.uid,
+            user: {
+                id: user.uid,
+                name: user.displayName || 'Anonymous User',
+                avatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`,
+            },
+            imageUrl: imagePreview,
+            imageHint: imageHint,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
 
-    if (result.success) {
-      toast({
-        title: 'Item Posted!',
-        description: 'Your item has been successfully listed.',
-      });
-      onFormSubmit();
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Submission Failed',
-        description: result.error,
-      });
+        toast({
+            title: 'Item Posted!',
+            description: 'Your item has been successfully listed.',
+        });
+        onFormSubmit();
+
+    } catch (error: any) {
+        console.error("Error posting item:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Submission Failed',
+            description: error.message || 'An unknown error occurred.',
+        });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -152,7 +174,7 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
                 </div>
               )}
               {imagePreview ? (
-                <Image src={imagePreview} alt="Item preview" layout="fill" objectFit="contain" className="rounded-lg p-1" />
+                <Image src={imagePreview} alt="Item preview" fill objectFit="contain" className="rounded-lg p-1" />
               ) : (
                 <div className="text-center text-muted-foreground">
                   <ImageIcon className="mx-auto h-12 w-12" />
@@ -254,7 +276,7 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
                   <FormItem className="md:col-span-2">
                     <FormLabel>Date when the item was Lost or Found</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., July 25, 2024" {...field} />
+                      <Input type="text" placeholder="e.g., July 25, 2024" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
