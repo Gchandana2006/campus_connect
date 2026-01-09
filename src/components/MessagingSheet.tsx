@@ -1,6 +1,8 @@
+
 // src/components/MessagingSheet.tsx
 'use client';
 
+import { useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -12,28 +14,45 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, Loader2 } from 'lucide-react';
 import type { Item } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ScrollArea } from './ui/scroll-area';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import Link from 'next/link';
+import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+
+interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderAvatarUrl: string;
+  content: string;
+  createdAt: {
+    toDate: () => Date;
+  };
+}
 
 interface MessagingSheetProps {
   item: Item;
 }
 
-const mockMessages = [
-  { id: 1, sender: 'other', text: 'Hey, I think I found your notebook!', time: '10:30 AM' },
-  { id: 2, sender: 'me', text: 'Oh, really? That\'s great! Where did you find it?', time: '10:31 AM' },
-  { id: 3, sender: 'other', text: 'It was in the main library, on the second floor near the study desks.', time: '10:32 AM' },
-  { id: 4, sender: 'me', text: 'Perfect, that sounds like where I left it. Can we meet somewhere so I can pick it up?', time: '10:33 AM' },
-  { id: 5, sender: 'other', text: 'Sure, how about in front of the library entrance in 15 minutes?', time: '10:34 AM' },
-  { id: 6, sender: 'me', text: 'Sounds good! I\'ll be there. Thank you so much!', time: '10:34 AM' },
-];
-
 export function MessagingSheet({ item }: MessagingSheetProps) {
   const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const messagesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, `items/${item.id}/messages`), orderBy('createdAt', 'asc'));
+  }, [firestore, item.id]);
+
+  const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
+  
   const buttonText = item.status === 'Lost' ? 'Contact Finder' : 'Contact Owner';
 
   if (!user) {
@@ -46,6 +65,33 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
       </Button>
     );
   }
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !user || !firestore) return;
+    setIsSending(true);
+
+    try {
+      const messagesCol = collection(firestore, `items/${item.id}/messages`);
+      await addDoc(messagesCol, {
+        senderId: user.uid,
+        senderName: user.displayName || 'Anonymous',
+        senderAvatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`,
+        content: message,
+        createdAt: serverTimestamp(),
+      });
+      setMessage('');
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error Sending Message',
+        description: error.message || 'Could not send your message.',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
 
   return (
     <Sheet>
@@ -64,41 +110,66 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
         </SheetHeader>
         <ScrollArea className="flex-grow my-4 pr-4 -mr-6">
           <div className="space-y-4">
-            {mockMessages.map((msg) => (
+            {isLoadingMessages && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+            {messages?.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex items-end gap-2 ${
-                  msg.sender === 'me' ? 'justify-end' : ''
+                  msg.senderId === user.uid ? 'justify-end' : ''
                 }`}
               >
-                {msg.sender === 'other' && (
+                {msg.senderId !== user.uid && (
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={item.user.avatarUrl} />
-                    <AvatarFallback>{item.user.name.substring(0, 2)}</AvatarFallback>
+                    <AvatarImage src={msg.senderAvatarUrl} alt={msg.senderName} />
+                    <AvatarFallback>{msg.senderName.substring(0, 2)}</AvatarFallback>
                   </Avatar>
                 )}
                 <div
                   className={`max-w-xs rounded-lg p-3 ${
-                    msg.sender === 'me'
+                    msg.senderId === user.uid
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
                   }`}
                 >
-                  <p className="text-sm">{msg.text}</p>
-                  <p className={`text-xs mt-1 ${msg.sender === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{msg.time}</p>
+                  <p className="text-sm">{msg.content}</p>
+                  <p className={`text-xs mt-1 ${msg.senderId === user.uid ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                    {msg.createdAt ? format(msg.createdAt.toDate(), 'p') : 'sending...'}
+                  </p>
                 </div>
+                 {msg.senderId === user.uid && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={msg.senderAvatarUrl} alt={msg.senderName}/>
+                    <AvatarFallback>{msg.senderName.substring(0, 2)}</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             ))}
+             {!isLoadingMessages && messages?.length === 0 && (
+                <div className="text-center text-muted-foreground p-8">
+                    No messages yet. Start the conversation!
+                </div>
+            )}
           </div>
         </ScrollArea>
         <SheetFooter>
-          <div className="flex w-full items-center space-x-2">
-            <Input id="message" placeholder="Type your message..." className="flex-1" autoComplete="off" />
-            <Button type="submit" size="icon">
-              <Send className="h-4 w-4" />
+          <form
+            className="flex w-full items-center space-x-2"
+            onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
+           >
+            <Input 
+              id="message" 
+              placeholder="Type your message..." 
+              className="flex-1" 
+              autoComplete="off" 
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              disabled={isSending}
+            />
+            <Button type="submit" size="icon" disabled={isSending || !message.trim()}>
+              {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               <span className="sr-only">Send</span>
             </Button>
-          </div>
+          </form>
         </SheetFooter>
       </SheetContent>
     </Sheet>

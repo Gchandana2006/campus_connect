@@ -104,7 +104,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Message",
       "type": "object",
-      "description": "Represents a message exchanged between users.",
+      "description": "Represents a message exchanged between users about a specific item.",
       "properties": {
         "id": {
           "type": "string",
@@ -112,17 +112,21 @@
         },
         "senderId": {
           "type": "string",
-          "description": "Reference to the User who sent the message. (Relationship: User 1:N Message)"
+          "description": "The UID of the user who sent the message."
         },
-        "receiverId": {
-          "type": "string",
-          "description": "Reference to the User who received the message. (Relationship: User 1:N Message)"
+        "senderName": {
+            "type": "string",
+            "description": "The display name of the user who sent the message."
+        },
+        "senderAvatarUrl": {
+            "type": "string",
+            "description": "The avatar URL of the user who sent the message."
         },
         "content": {
           "type": "string",
           "description": "The content of the message."
         },
-        "timestamp": {
+        "createdAt": {
           "type": "string",
           "description": "The date and time when the message was sent.",
           "format": "date-time"
@@ -131,9 +135,9 @@
       "required": [
         "id",
         "senderId",
-        "receiverId",
+        "senderName",
         "content",
-        "timestamp"
+        "createdAt"
       ]
     }
   },
@@ -150,7 +154,16 @@
             "schema": {
               "$ref": "#/entities/Item"
             },
-            "description": "Stores all lost and found items."
+            "description": "Stores all lost and found items.",
+            "subcollections": [
+                {
+                    "name": "messages",
+                    "schema": {
+                        "$ref": "#/entities/Message"
+                    },
+                    "description": "Stores messages related to a specific item."
+                }
+            ]
         },
         {
             "name": "users",
@@ -158,13 +171,6 @@
                 "$ref": "#/entities/User"
             },
             "description": "Stores user profiles."
-        },
-        {
-            "name": "messages",
-            "schema": {
-                "$ref": "#/entities/Message"
-            },
-            "description": "Stores direct messages between users."
         }
     ]
   }
