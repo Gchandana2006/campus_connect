@@ -7,7 +7,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function AboutPage() {
 
-  const aboutImage = PlaceHolderImages.find(p => p.id === 'about-student-tablet');
+  const aboutImage = PlaceHolderImages.find(p => p.id === 'about-student-tablet')!;
 
   return (
     <div className="container mx-auto py-12 md:py-16">
@@ -20,7 +20,6 @@ export default function AboutPage() {
 
       <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         <div className="relative aspect-square md:aspect-[4/3] rounded-lg overflow-hidden border-4 border-primary/20 shadow-lg">
-          {aboutImage && (
             <Image
               src={aboutImage.imageUrl}
               alt={aboutImage.description}
@@ -29,7 +28,6 @@ export default function AboutPage() {
               data-ai-hint={aboutImage.imageHint}
               sizes="(max-width: 768px) 100vw, 50vw"
             />
-          )}
            <div className="absolute top-3 left-3 bg-background/80 p-2 rounded-full">
               <Users className="h-6 w-6 text-primary" />
            </div>
