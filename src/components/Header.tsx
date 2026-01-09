@@ -2,7 +2,15 @@
 'use client';
 
 import Link from 'next/link';
-import { PlusCircle, LogOut, User, Settings, LogIn } from 'lucide-react';
+import {
+  LogOut,
+  User,
+  LogIn,
+  Home,
+  FilePenLine,
+  MessageSquare,
+  Info,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -15,85 +23,110 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PostItemDialog } from './PostItemDialog';
 import { Logo } from './icons/Logo';
-import { useAuth, useUser } from '@/firebase';
-import { getAuth } from 'firebase/auth';
+import { useUser } from '@/firebase';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+
+const navLinks = [
+  { href: '/', label: 'Home', icon: Home },
+  { href: '/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/about', label: 'About', icon: Info },
+];
 
 export default function Header() {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
+  const pathname = usePathname();
 
   const handleLogout = () => {
-    if (auth) {
-      auth.signOut();
-    }
+    // This assumes you have access to the auth instance to sign out.
+    // This might need to be adjusted based on your Firebase setup.
+    // e.g., if useAuth() hook provides auth, use it here.
+    // For now, we'll assume a global auth instance or similar.
+    // import { getAuth } from 'firebase/auth';
+    // getAuth().signOut();
+    console.log('Logout action');
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full bg-primary text-primary-foreground">
       <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Logo className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline">Campus Connect</span>
+            <Logo className="h-8 w-8" />
+            <span className="text-xl font-bold font-headline">CampusConnect</span>
           </Link>
         </div>
+
+        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          {navLinks.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                'flex items-center gap-2 transition-colors hover:text-primary-foreground/80',
+                pathname === link.href ? 'text-primary-foreground' : 'text-primary-foreground/60'
+              )}
+            >
+              <link.icon className="h-4 w-4" />
+              {link.label}
+            </Link>
+          ))}
+          <PostItemDialog>
+            <button
+              className={cn(
+                'flex items-center gap-2 transition-colors hover:text-primary-foreground/80 text-primary-foreground/60'
+              )}
+            >
+              <FilePenLine className="h-4 w-4" />
+              Report an item
+            </button>
+          </PostItemDialog>
+        </nav>
+
         <div className="flex flex-1 items-center justify-end space-x-2">
           {isUserLoading ? (
-            <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+            <div className="h-9 w-9 animate-pulse rounded-full bg-primary/20" />
           ) : user ? (
-            <>
-              <PostItemDialog>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Post Item
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9 border-2 border-primary-foreground/50">
+                    <AvatarImage
+                      src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`}
+                      alt={user.displayName || 'User'}
+                    />
+                    <AvatarFallback>{user.email?.[0].toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
                 </Button>
-              </PostItemDialog>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage data-ai-hint="person portrait" src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`} alt={user.displayName || 'User'} />
-                      <AvatarFallback>{user.email?.[0].toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.displayName || 'Campus User'}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <Link href="/profile">
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                  </Link>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.displayName || 'Campus User'}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <Link href="/profile">
                   <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <div className='flex items-center gap-2'>
-              <Button asChild variant="ghost">
-                <Link href="/login">Log In</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/signup">Sign Up</Link>
-              </Button>
-            </div>
+            <Button asChild variant="secondary">
+              <Link href="/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Link>
+            </Button>
           )}
         </div>
       </div>

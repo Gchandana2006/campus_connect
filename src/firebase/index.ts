@@ -33,9 +33,14 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  const auth = getAuth(firebaseApp);
+  // In a real app, you would want to connect to the emulators in development
+  // if (process.env.NODE_ENV === 'development') {
+  //   connectAuthEmulator(auth, 'http://localhost:9099');
+  // }
   return {
     firebaseApp,
-    auth: getAuth(firebaseApp),
+    auth,
     firestore: getFirestore(firebaseApp)
   };
 }
