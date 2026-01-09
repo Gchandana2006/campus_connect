@@ -66,8 +66,6 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
 
   const posterName = item?.user?.name || 'the poster';
   
-  const buttonText = item.status === 'Lost' ? 'Contact Finder' : 'Contact Owner';
-
   const isOwner = user?.uid === item.userId;
 
   const handleSendMessage = async () => {
@@ -98,6 +96,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
 
   // Render a login button if user is not logged in
   if (!user) {
+    const buttonText = item.status === 'Lost' ? 'Contact Finder' : 'Contact Owner';
     return (
       <Button asChild className="w-full">
           <Link href="/login">
@@ -108,21 +107,27 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
     );
   }
 
-  // Render a disabled button if the user is the owner of the item
+  // Logic for button text and state
+  let buttonText: string;
+  let buttonDisabled = false;
+  
   if (isOwner) {
-      return (
-          <Button className="w-full" disabled>
-              <MessageSquare className="mr-2 h-4 w-4" />
-              This is your item
-          </Button>
-      );
+    if (item.status === 'Found') {
+        buttonText = 'View Messages'; // As finder, you view messages
+    } else { // status is 'Lost' or 'Resolved'
+        buttonText = 'This is your item';
+        buttonDisabled = true;
+    }
+  } else {
+      buttonText = item.status === 'Lost' ? 'Contact Owner' : 'Contact Finder';
   }
+
 
   // Otherwise, render the messaging sheet for the user
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button className="w-full">
+        <Button className="w-full" disabled={buttonDisabled}>
             <MessageSquare className="mr-2 h-4 w-4" />
             {buttonText}
         </Button>
@@ -131,7 +136,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
           <SheetHeader>
           <SheetTitle>Chat about "{item.name}"</SheetTitle>
           <SheetDescription>
-              You are chatting with {posterName}. Keep conversations respectful and arrange pickups in safe, public locations.
+              {isOwner ? "You are viewing messages for your item." : `You are chatting with ${posterName}. Keep conversations respectful and arrange pickups in safe, public locations.`}
           </SheetDescription>
           </SheetHeader>
           <ScrollArea ref={scrollAreaRef} className="flex-grow my-4 pr-4 -mr-6">
@@ -172,7 +177,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
               ))}
               {!isLoadingMessages && messages?.length === 0 && (
                   <div className="text-center text-muted-foreground p-8">
-                      No messages yet. Start the conversation!
+                      No messages yet. {isOwner ? 'Wait for someone to contact you.' : 'Start the conversation!'}
                   </div>
               )}
           </div>
