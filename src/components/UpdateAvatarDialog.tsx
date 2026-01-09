@@ -23,7 +23,7 @@ import Image from 'next/image';
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB limit for initial upload
 const AVATAR_DIMENSION = 128; // Resize to 128x128 pixels
-const JPEG_QUALITY = 0.8; // Use 80% quality
+const JPEG_QUALITY = 0.7; // Use 70% quality
 const MAX_DATA_URI_LENGTH = 32000; // Firebase photoURL limit is ~32KB
 
 export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) {
