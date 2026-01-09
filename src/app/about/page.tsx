@@ -12,9 +12,9 @@ export default function AboutPage() {
   return (
     <div className="container mx-auto py-12 md:py-16">
       <div className="text-center mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold font-headline text-primary">About Our Lost & Found System</h1>
+        <h1 className="text-3xl md:text-4xl font-bold font-headline text-primary">About Campus Connect</h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          A trusted platform to <span className="text-destructive font-semibold">reconnect students</span> with their lost belongings securely.
+          Your campus-wide solution for reuniting lost items with their owners.
         </p>
       </div>
 
@@ -37,23 +37,23 @@ export default function AboutPage() {
 
         <div className="space-y-8">
           <div>
-            <h2 className="text-2xl font-bold font-headline text-green-700">Why Choose Our Platform?</h2>
+            <h2 className="text-2xl font-bold font-headline text-primary">Why We Built This</h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              The University Lost & Found Portal offers a <span className="font-semibold text-destructive">seamless and secure</span> way for students to report, search, and reclaim lost items. Our community-driven approach ensures that those who return lost items are appreciated, and students can recover their belongings safely.
+             We've all felt the stress of losing something important on campus. Campus Connect was created to solve that problem. Our platform provides a centralized, secure, and easy-to-use digital lost and found, making it simple to report a lost item or post something you've found. Our goal is to foster a helpful community where students can easily reconnect with their belongings.
             </p>
           </div>
           
           <div>
-            <h2 className="text-2xl font-bold font-headline text-green-700">Benefits for those who help:</h2>
+            <h2 className="text-2xl font-bold font-headline text-primary">A Community of Helpers</h2>
             <Card className="mt-4 bg-accent/30 border-accent">
                 <CardContent className="p-4 flex items-center gap-4">
                     <Award className="h-8 w-8 text-primary flex-shrink-0"/>
                     <div>
                         <p className="font-semibold text-primary">
-                          100/- token reward
+                          Be a Campus Hero
                         </p>
                         <p className="text-sm text-muted-foreground">
-                         For individuals who return lost items, upon successful recovery by the owner.
+                         By finding and returning an item, you're not just helping a fellow student—you're strengthening our campus community. Every returned item makes a difference.
                         </p>
                     </div>
                 </CardContent>
