@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, User } from 'lucide-react';
+import { EditProfileDialog } from '@/components/EditProfileDialog';
 
 export default function ProfilePage() {
   const { user, isUserLoading, userError } = useUser();
@@ -77,7 +78,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
-            <Button className="w-full" disabled>Edit Profile (coming soon)</Button>
+            <EditProfileDialog />
         </CardContent>
       </Card>
     </div>
