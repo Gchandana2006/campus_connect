@@ -50,17 +50,18 @@ export function SignUpForm() {
       router.push('/');
     } catch (error: any) {
       console.error('Sign up error:', error);
-      let description = 'An unknown error occurred.';
       if (error.code === 'auth/email-already-in-use') {
-        description = 'An account with this email address already exists.';
+        form.setError('email', {
+          type: 'manual',
+          message: 'An account with this email address already exists.',
+        });
       } else {
-        description = error.message || description;
+        toast({
+          variant: 'destructive',
+          title: 'Sign Up Failed',
+          description: error.message || 'An unknown error occurred.',
+        });
       }
-      toast({
-        variant: 'destructive',
-        title: 'Sign Up Failed',
-        description,
-      });
     } finally {
         setIsLoading(false);
     }
