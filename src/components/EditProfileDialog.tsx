@@ -22,6 +22,7 @@ import { useAuth, useUser } from '@/firebase';
 import { updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const profileSchema = z.object({
   displayName: z.string().min(2, 'Display name must be at least 2 characters.').max(50, 'Display name is too long.'),
@@ -35,6 +36,7 @@ export function EditProfileDialog() {
   const { user } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -70,6 +72,7 @@ export function EditProfileDialog() {
             description: "Your display name has been successfully updated.",
         });
         setOpen(false); // Close dialog on success
+        router.refresh(); // Refresh the page to show the updated profile
     } catch (error: any) {
         console.error("Profile update error:", error);
         toast({
