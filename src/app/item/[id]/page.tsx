@@ -112,19 +112,21 @@ export default function ItemDetailPage() {
                     <p className="font-semibold">{item.date}</p>
                 </div>
             </div>
-             <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-md">
-                <User className="h-5 w-5 text-primary" />
-                <div>
-                    <p className="text-muted-foreground">Posted By</p>
-                    <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                            <AvatarImage src={item.user.avatarUrl} alt={item.user.name} />
-                            <AvatarFallback>{item.user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <p className="font-semibold">{item.user.name}</p>
+             {item.user && (
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-md">
+                    <User className="h-5 w-5 text-primary" />
+                    <div>
+                        <p className="text-muted-foreground">Posted By</p>
+                        <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                                <AvatarImage src={item.user.avatarUrl} alt={item.user.name} />
+                                <AvatarFallback>{item.user.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <p className="font-semibold">{item.user.name}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
           </div>
           
           <MessagingSheet item={item} />
