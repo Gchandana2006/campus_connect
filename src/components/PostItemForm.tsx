@@ -1,4 +1,3 @@
-
 // src/components/PostItemForm.tsx
 "use client";
 
@@ -18,13 +17,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import { categories, locations } from '@/lib/types';
-import { analyzeImageAction } from '@/app/actions';
+import { analyzeImageAction, postItemAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { ScrollArea } from './ui/scroll-area';
+import { useUser } from '@/firebase';
 
 const itemSchema = z.object({
   name: z.string().min(3, "Item name must be at least 3 characters."),
@@ -40,9 +39,11 @@ type ItemFormValues = z.infer<typeof itemSchema>;
 export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useUser();
 
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(itemSchema),
@@ -106,13 +107,33 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
   
   const allCategories = [...new Set([...suggestedCategories, ...categories])];
 
-  const onSubmit = (data: ItemFormValues) => {
-    console.log(data);
-    toast({
-      title: 'Item Posted!',
-      description: 'Your item has been successfully listed.',
-    });
-    onFormSubmit();
+  const onSubmit = async (data: ItemFormValues) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Not authenticated', description: 'You must be logged in to post an item.' });
+        return;
+    }
+    if (!imagePreview) {
+        toast({ variant: 'destructive', title: 'Image required', description: 'Please upload an image of the item.' });
+        return;
+    }
+
+    setIsSubmitting(true);
+    const result = await postItemAction({ ...data, userId: user.uid, imageUri: imagePreview });
+    setIsSubmitting(false);
+
+    if (result.success) {
+      toast({
+        title: 'Item Posted!',
+        description: 'Your item has been successfully listed.',
+      });
+      onFormSubmit();
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Submission Failed',
+        description: result.error,
+      });
+    }
   };
 
   return (
@@ -124,10 +145,10 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
               className="col-span-1 md:col-span-2 aspect-video bg-muted rounded-lg flex items-center justify-center border-2 border-dashed cursor-pointer relative"
               onClick={() => fileInputRef.current?.click()}
             >
-              {isAnalyzing && (
+              {(isAnalyzing || isSubmitting) && (
                 <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center z-10">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="mt-2 text-sm text-muted-foreground">Analyzing image...</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{isSubmitting ? 'Posting item...' : 'Analyzing image...'}</p>
                 </div>
               )}
               {imagePreview ? (
@@ -145,6 +166,7 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
                 onChange={handleImageChange}
                 className="hidden"
                 accept="image/png, image/jpeg"
+                disabled={isAnalyzing || isSubmitting}
               />
             </div>
 
@@ -224,7 +246,7 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
                 </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
                 name="date"
@@ -241,8 +263,8 @@ export function PostItemForm({ onFormSubmit }: { onFormSubmit: () => void }) {
             </div>
           </div>
         </ScrollArea>
-        <Button type="submit" className="w-full" disabled={isAnalyzing}>
-            {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" className="w-full" disabled={isAnalyzing || isSubmitting}>
+            {(isAnalyzing || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Submit Item
         </Button>
       </form>

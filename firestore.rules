@@ -1,164 +1,31 @@
-/**
- * This ruleset enforces a strict user-ownership security model for a Lost & Found application.
- *
- * Core Philosophy:
- * The security model is user-centric. All user-generated content, such as lost or found
- * item reports, is stored in subcollections under that user's unique document path. This
- * path-based ownership ensures that users can only access and manage their own data.
- * Direct messages are handled in a separate top-level collection, with access strictly
- * limited to the sender and receiver of the message.
- *
- * Data Structure:
- * - /users/{userId}: Private user profile data.
- * - /users/{userId}/lostItems/{lostItemId}: Items reported lost by the user.
- * - /users/{userId}/foundItems/{foundItemId}: Items reported found by the user.
- * - /messages/{messageId}: Direct messages between users.
- *
- * Key Security Decisions:
- * - User Isolation: Users cannot read, list, or modify the data of any other user.
- *   The top-level /users collection is not listable to protect user privacy.
- * - Ownership Integrity: When a user creates a document (e.g., a lostItem), the rules
- *   enforce that the document's internal `userId` field matches the user's authenticated UID
- *   and the path they are writing to. This field is then made immutable to prevent re-assignment.
- * - Message Privacy: Access to a message document is granted only if the requesting user's
- *   UID is present in the document's `senderId` or `receiverId` field. Messages are immutable
- *   once created.
- *
- * Denormalization for Authorization:
- * This ruleset relies on denormalization for efficient and secure authorization.
- * - For user-specific data like `lostItems`, the ownership is determined by the document path,
- *   which avoids costly `get()` calls to other documents.
- * - For `messages`, the `senderId` and `receiverId` are stored directly on the message document,
- *   allowing for a direct and performant authorization check without needing to query other collections.
- */
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // Helper Functions
-    // --------------------------------
-
-    /**
-     * Returns true if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Returns true if the requesting user's UID matches the provided userId.
-     * This is the primary function for establishing document ownership.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
-    /**
-     * Returns true if the user is the owner AND the document already exists.
-     * Used for safe update and delete operations.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    
+    // Allow read access to all users, but write access only to authenticated users who own the document.
+    match /items/{itemId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
-    /**
-     * Validates that the `id` field of a user profile is immutable on update.
-     */
-    function isUserIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates that the `userId` ownership field is immutable on update.
-     */
-    function isOwnerFieldImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    /**
-     * Returns true if the user is the sender or receiver of an existing message.
-     */
-    function isMessageParticipant() {
-      return isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
-    }
-
-    /**
-     * Returns true if the user is the sender of an incoming message being created.
-     * Validates that the `senderId` in the new data matches the user's auth UID.
-     */
-    function canCreateMessage() {
-      return isSignedIn() && request.resource.data.senderId == request.auth.uid;
-    }
-
-    /**
-     * Returns true if the user is the sender of an existing message.
-     * Used for delete operations.
-     */
-    function isSenderOfExistingMessage() {
-      return isSignedIn() && resource != null && resource.data.senderId == request.auth.uid;
-    }
-
-
-    /**
-     * @description Manages user profile documents.
-     * @path /users/{userId}
-     * @allow A signed-in user (create)s their own profile document where `userId` matches their auth UID.
-     * @deny An anonymous user tries to (update) a user profile.
-     * @principle Restricts access to a user's own data tree and enforces self-creation.
-     */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && isUserIdImmutable();
-      allow delete: if false;
+      allow read, write: if isOwner(userId);
     }
-
-    /**
-     * @description Manages lost items reported by a specific user.
-     * @path /users/{userId}/lostItems/{lostItemId}
-     * @allow A signed-in user (create)s a `lostItem` document under their own `userId` path.
-     * @deny User 'A' tries to (delete) a `lostItem` belonging to user 'B'.
-     * @principle Enforces document ownership for all operations based on the path.
-     */
-    match /users/{userId}/lostItems/{lostItemId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && isOwnerFieldImmutable();
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Manages found items reported by a specific user.
-     * @path /users/{userId}/foundItems/{foundItemId}
-     * @allow A signed-in user (update)s a `foundItem` document under their own `userId` path.
-     * @deny An anonymous user tries to (list) `foundItem` documents.
-     * @principle Enforces document ownership for all operations based on the path.
-     */
-    match /users/{userId}/foundItems/{foundItemId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && isOwnerFieldImmutable();
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Manages direct messages between two users.
-     * @path /messages/{messageId}
-     * @allow A signed-in user (get)s a message where their UID matches the `senderId` or `receiverId`.
-     * @deny A user tries to (update) a message after it has been sent.
-     * @principle Restricts access to participants of a conversation and enforces immutability.
-     */
+    
     match /messages/{messageId} {
-      allow get: if isMessageParticipant();
-      // This rule requires that client-side queries include a `where` clause to filter
-      // by either 'senderId' or 'receiverId', preventing open-ended collection scans.
-      allow list: if false;
-      allow create: if canCreateMessage();
-      allow update: if false;
-      allow delete: if isSenderOfExistingMessage();
+        allow read, write: if isSignedIn() && (request.resource.data.senderId == request.auth.uid || request.resource.data.receiverId == request.auth.uid);
     }
   }
 }

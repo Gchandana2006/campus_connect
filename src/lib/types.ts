@@ -1,4 +1,6 @@
 // src/lib/types.ts
+import type { Timestamp } from 'firebase/firestore';
+
 export type Item = {
     id: string;
     name: string;
@@ -14,6 +16,9 @@ export type Item = {
       name: string;
       avatarUrl: string;
     };
+    userId: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
   };
   
   export const categories = [

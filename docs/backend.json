@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -32,11 +33,11 @@
         "registrationDate"
       ]
     },
-    "LostItem": {
+    "Item": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LostItem",
+      "title": "Item",
       "type": "object",
-      "description": "Represents a lost item reported on the platform.",
+      "description": "Represents a lost or found item reported on the platform.",
       "properties": {
         "id": {
           "type": "string",
@@ -44,104 +45,59 @@
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User who reported the item as lost. (Relationship: User 1:N LostItem)"
+          "description": "Reference to the User who reported the item. (Relationship: User 1:N Item)"
         },
-        "itemName": {
+        "name": {
           "type": "string",
-          "description": "The name of the lost item."
+          "description": "The name of the item."
         },
         "category": {
           "type": "string",
-          "description": "The category of the lost item (e.g., Electronics, Books)."
+          "description": "The category of the item (e.g., Electronics, Books)."
         },
         "description": {
           "type": "string",
-          "description": "A detailed description of the lost item."
+          "description": "A detailed description of the item."
         },
-        "dateLost": {
+        "date": {
           "type": "string",
-          "description": "The date when the item was lost.",
-          "format": "date-time"
+          "description": "The date when the item was lost/found."
         },
         "location": {
           "type": "string",
-          "description": "The location where the item was lost (e.g., Library, Cafeteria)."
+          "description": "The location where the item was lost/found (e.g., Library, Cafeteria)."
         },
         "imageUri": {
           "type": "string",
-          "description": "URI of the image associated with the lost item."
+          "description": "URI of the image associated with the item."
         },
         "status": {
           "type": "string",
-          "description": "The status of the lost item (Lost/Found/Resolved)."
+          "description": "The status of the item (Lost/Found/Resolved)."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the item was created."
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the item was last updated."
         }
       },
       "required": [
         "id",
         "userId",
-        "itemName",
+        "name",
         "category",
         "description",
-        "dateLost",
+        "date",
         "location",
         "imageUri",
-        "status"
-      ]
-    },
-    "FoundItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "FoundItem",
-      "type": "object",
-      "description": "Represents a found item reported on the platform.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the found item entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User who reported the item as found. (Relationship: User 1:N FoundItem)"
-        },
-        "itemName": {
-          "type": "string",
-          "description": "The name of the found item."
-        },
-        "category": {
-          "type": "string",
-          "description": "The category of the found item (e.g., Electronics, Books)."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the found item."
-        },
-        "dateFound": {
-          "type": "string",
-          "description": "The date when the item was found.",
-          "format": "date-time"
-        },
-        "location": {
-          "type": "string",
-          "description": "The location where the item was found (e.g., Library, Cafeteria)."
-        },
-        "imageUri": {
-          "type": "string",
-          "description": "URI of the image associated with the found item."
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the found item (Lost/Found/Resolved)."
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "itemName",
-        "category",
-        "description",
-        "dateFound",
-        "location",
-        "imageUri",
-        "status"
+        "status",
+        "createdAt",
+        "updatedAt"
       ]
     },
     "Message": {
@@ -188,80 +144,28 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. The 'userId' parameter is the unique identifier for each user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/lostItems/{lostItemId}",
-        "definition": {
-          "entityName": "LostItem",
-          "schema": {
-            "$ref": "#/backend/entities/LostItem"
-          },
-          "description": "Stores lost items reported by a specific user. Path-based ownership enforces that only the user can manage items under their userId. Includes userId in the document.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user who reported the lost item."
+    "collections": [
+        {
+            "name": "items",
+            "schema": {
+              "$ref": "#/entities/Item"
             },
-            {
-              "name": "lostItemId",
-              "description": "The unique identifier for the lost item."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/foundItems/{foundItemId}",
-        "definition": {
-          "entityName": "FoundItem",
-          "schema": {
-            "$ref": "#/backend/entities/FoundItem"
-          },
-          "description": "Stores found items reported by a specific user. Path-based ownership enforces that only the user can manage items under their userId. Includes userId in the document.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user who reported the found item."
+            "description": "Stores all lost and found items."
+        },
+        {
+            "name": "users",
+            "schema": {
+                "$ref": "#/entities/User"
             },
-            {
-              "name": "foundItemId",
-              "description": "The unique identifier for the found item."
-            }
-          ]
+            "description": "Stores user profiles."
+        },
+        {
+            "name": "messages",
+            "schema": {
+                "$ref": "#/entities/Message"
+            },
+            "description": "Stores direct messages between users."
         }
-      },
-      {
-        "path": "/messages/{messageId}",
-        "definition": {
-          "entityName": "Message",
-          "schema": {
-            "$ref": "#/backend/entities/Message"
-          },
-          "description": "Stores direct messages between users.  Security rules will check that the requesting user's ID matches either the senderId or receiverId in the message document.",
-          "params": [
-            {
-              "name": "messageId",
-              "description": "The unique identifier for the message."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore data structure is designed to support the Lost & Found application with a focus on secure data access, scalability, and maintainability. It leverages path-based ownership for user-related data (LostItems, FoundItems) and a top-level collection for direct messaging between users.\n\n*   **Users Collection:** Stores user profiles.\n*   **User-Owned Data (LostItems, FoundItems):**  These subcollections under `/users/{userId}` enforce clear ownership, simplifying security rules.  A user can only `create`, `read`, `update`, or `delete` items within their own `/users/{userId}` path. This ensures authorization independence, as no `get()` calls are needed to verify ownership.\n*   **Direct Messages Collection:**  The `/messages` collection stores direct messages between users. Access is controlled by checking if the `request.auth.uid` matches either the `senderId` or `receiverId` of the message.\n\n**Authorization Independence:** Authorization Independence is achieved through path-based ownership for LostItems and FoundItems and by explicitly checking `senderId` and `receiverId` for messages. This avoids `get()` calls in the security rules, enabling atomic operations and improved debuggability.\n\n**QAPs (Rules are not Filters):**\n*   **Secure List Operations:** The structure enables secure `list` operations by ensuring that listing LostItems or FoundItems under `/users/{userId}` only returns items owned by that user.  Listing messages requires checking if the user's ID is either the sender or receiver, preventing unauthorized access to messages.\n\n**Denormalization:**\n*   No denormalization is strictly required at this stage since path-based ownership is utilized to restrict user access to resources."
+    ]
   }
 }

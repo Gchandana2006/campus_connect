@@ -19,7 +19,7 @@ export function ItemCard({ item }: ItemCardProps) {
     Resolved: 'secondary',
   }[item.status] as "destructive" | "default" | "secondary";
 
-  const date = new Date(item.date);
+  const date = item.createdAt?.toDate() || new Date();
   const timeAgo = formatDistanceToNow(date, { addSuffix: true });
 
   return (
