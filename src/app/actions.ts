@@ -6,7 +6,17 @@ import {
   type GenerateItemDetailsFromImageInput,
 } from '@/ai/flows/generate-item-details-from-image';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase/server';
+import { initializeApp, getApps } from 'firebase/app';
+import { firebaseConfig } from '@/firebase/config';
+
+// Helper to initialize Firebase on the server for actions
+function initializeFirebaseForActions() {
+    if (getApps().length === 0) {
+        return initializeApp(firebaseConfig);
+    }
+    return getApps()[0];
+}
+
 
 export async function analyzeImageAction(input: GenerateItemDetailsFromImageInput) {
   try {
@@ -32,8 +42,8 @@ export type PostItemInput = {
 
 export async function postItemAction(input: PostItemInput) {
     try {
-        const { firestore } = initializeFirebase();
-        const collectionName = input.status === 'Lost' ? 'lostItems' : 'foundItems';
+        const app = initializeFirebaseForActions();
+        const firestore = getFirestore(app);
         
         await addDoc(collection(firestore, 'items'), {
             ...input,
