@@ -8,18 +8,22 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address.'),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
 });
 
+const resetSchema = z.object({
+    email: z.string().email('Invalid email address.'),
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
+type ResetFormValues = z.infer<typeof resetSchema>;
 
 export function LoginForm() {
   const { toast } = useToast();
@@ -27,8 +31,9 @@ export function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [formMode, setFormMode] = useState<'login' | 'reset'>('login');
 
-  const form = useForm<LoginFormValues>({
+  const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -36,7 +41,14 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const resetForm = useForm<ResetFormValues>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: {
+        email: '',
+    }
+  });
+
+  const onLoginSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     setShowForgotPassword(false);
     try {
@@ -49,7 +61,7 @@ export function LoginForm() {
     } catch (error: any) {
       console.error('Login error:', error);
 
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         setShowForgotPassword(true);
         toast({
           variant: 'destructive',
@@ -68,11 +80,67 @@ export function LoginForm() {
     }
   };
 
+  const onResetSubmit = async (data: ResetFormValues) => {
+    setIsLoading(true);
+    try {
+        await sendPasswordResetEmail(auth, data.email);
+        toast({
+            title: 'Password Reset Email Sent',
+            description: 'Please check your inbox for instructions to reset your password.',
+        });
+        setFormMode('login'); // Switch back to login form
+    } catch (error: any) {
+        console.error('Password reset error:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Error Sending Email',
+            description: error.message || 'Could not send password reset email.',
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
+  if (formMode === 'reset') {
+    return (
+        <div>
+            <h3 className="text-lg font-medium mb-4">Reset Password</h3>
+            <p className="text-sm text-muted-foreground mb-6">Enter your email address and we'll send you a link to reset your password.</p>
+            <Form {...resetForm}>
+                <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-6">
+                <FormField
+                    control={resetForm.control}
+                    name="email"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                        <Input type="email" placeholder="you@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Send Reset Link
+                </Button>
+                </form>
+            </Form>
+            <div className="mt-4 text-center text-sm">
+                <button onClick={() => setFormMode('login')} className="font-medium text-primary hover:underline">
+                    Back to Login
+                </button>
+            </div>
+        </div>
+    );
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <Form {...loginForm}>
+      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
         <FormField
-          control={form.control}
+          control={loginForm.control}
           name="email"
           render={({ field }) => (
             <FormItem>
@@ -85,7 +153,7 @@ export function LoginForm() {
           )}
         />
         <FormField
-          control={form.control}
+          control={loginForm.control}
           name="password"
           render={({ field }) => (
             <FormItem>
@@ -99,9 +167,9 @@ export function LoginForm() {
         />
         {showForgotPassword && (
           <div className="text-sm text-right">
-            <Link href="#" className="font-medium text-primary hover:underline">
+            <button type="button" onClick={() => setFormMode('reset')} className="font-medium text-primary hover:underline">
               Forgot Password?
-            </Link>
+            </button>
           </div>
         )}
         <Button type="submit" className="w-full" disabled={isLoading}>
