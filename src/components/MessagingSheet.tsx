@@ -54,6 +54,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
   
   const buttonText = item.status === 'Lost' ? 'Contact Finder' : 'Contact Owner';
+  const posterName = item.user?.name || 'the poster';
 
   if (!user) {
     return (
@@ -74,7 +75,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
       const messagesCol = collection(firestore, `items/${item.id}/messages`);
       await addDoc(messagesCol, {
         senderId: user.uid,
-        senderName: user.displayName || 'Anonymous',
+        senderName: user.displayName || 'Campus User',
         senderAvatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`,
         content: message,
         createdAt: serverTimestamp(),
@@ -96,16 +97,16 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button className="w-full" disabled={user?.uid === item.user.id}>
+        <Button className="w-full" disabled={user?.uid === item.userId}>
           <MessageSquare className="mr-2 h-4 w-4" />
-          {user?.uid === item.user.id ? "This is your item" : buttonText}
+          {user?.uid === item.userId ? "This is your item" : buttonText}
         </Button>
       </SheetTrigger>
       <SheetContent className="flex flex-col">
         <SheetHeader>
           <SheetTitle>Chat about "{item.name}"</SheetTitle>
           <SheetDescription>
-            You are chatting with {item.user.name}. Keep conversations respectful and arrange pickups in safe, public locations.
+            You are chatting with {posterName}. Keep conversations respectful and arrange pickups in safe, public locations.
           </SheetDescription>
         </SheetHeader>
         <ScrollArea className="flex-grow my-4 pr-4 -mr-6">

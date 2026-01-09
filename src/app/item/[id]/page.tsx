@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessagingSheet } from '@/components/MessagingSheet';
-import { format } from 'date-fns';
 
 export default function ItemDetailPage() {
   const params = useParams();
@@ -69,6 +68,9 @@ export default function ItemDetailPage() {
     Found: 'default',
     Resolved: 'secondary',
   }[item.status] as 'destructive' | 'default' | 'secondary';
+  
+  const posterName = item.user?.name || 'Campus User';
+  const posterAvatarUrl = item.user?.avatarUrl || `https://picsum.photos/seed/${item.userId}/100/100`;
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
@@ -112,21 +114,19 @@ export default function ItemDetailPage() {
                     <p className="font-semibold">{item.date}</p>
                 </div>
             </div>
-             {item.user && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-md">
-                    <User className="h-5 w-5 text-primary" />
-                    <div>
-                        <p className="text-muted-foreground">Posted By</p>
-                        <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                                <AvatarImage src={item.user.avatarUrl} alt={item.user.name} />
-                                <AvatarFallback>{item.user.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <p className="font-semibold">{item.user.name}</p>
-                        </div>
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-md">
+                <User className="h-5 w-5 text-primary" />
+                <div>
+                    <p className="text-muted-foreground">Posted By</p>
+                    <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                            <AvatarImage src={posterAvatarUrl} alt={posterName} />
+                            <AvatarFallback>{posterName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <p className="font-semibold">{posterName}</p>
                     </div>
                 </div>
-            )}
+            </div>
           </div>
           
           <MessagingSheet item={item} />
