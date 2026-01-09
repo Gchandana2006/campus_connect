@@ -19,7 +19,7 @@ export default function AboutPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-        <div className="relative aspect-square md:aspect-[4/3] rounded-lg overflow-hidden border-4 border-primary/20 shadow-lg">
+        <div className="relative aspect-[4/3] rounded-lg overflow-hidden border-4 border-primary/20 shadow-lg">
             <Image
               src={aboutImage.imageUrl}
               alt={aboutImage.description}
