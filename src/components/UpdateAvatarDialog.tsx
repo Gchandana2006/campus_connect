@@ -21,29 +21,22 @@ import { Loader2, Upload, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB limit for initial upload
-
 export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [newAvatarSeed, setNewAvatarSeed] = useState('');
   
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // When the dialog opens, generate a new random seed for the placeholder.
-    // This gives the user a new, predictable avatar to choose.
-    if (open) {
-      const seed = Math.random().toString(36).substring(7);
-      setNewAvatarSeed(seed);
-      // Set the preview to the image that will be used if they save.
-      setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
+    // When the dialog opens, set a default preview.
+    if (open && !imagePreview) {
+        const seed = Math.random().toString(36).substring(7);
+        setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
     }
-  }, [open]);
+  }, [open, imagePreview]);
 
 
   const handleSave = async () => {
@@ -58,8 +51,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
 
     setIsLoading(true);
     try {
-      // Use the valid picsum.photos URL for the profile update. This URL is a
-      // public HTTPS URL, which is what updateProfile expects.
+      // Use the valid picsum.photos URL for the profile update.
       await updateProfile(user, { photoURL: imagePreview });
 
       toast({
@@ -84,9 +76,13 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
     // Reset state when dialog is closed
     if (!isOpen) {
       setImagePreview(null);
-      setNewAvatarSeed('');
     }
     setOpen(isOpen);
+  }
+
+  const generateNewAvatar = () => {
+    const seed = Math.random().toString(36).substring(7);
+    setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
   }
 
   return (
@@ -96,7 +92,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Generate a new random avatar for your profile.
+            Choose a new avatar for your profile. Uploading and camera features will be enabled soon.
           </DialogDescription>
         </DialogHeader>
         
@@ -124,17 +120,22 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="grid grid-cols-2 gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  const seed = Math.random().toString(36).substring(7);
-                  setNewAvatarSeed(seed);
-                  setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
-                }} 
+                onClick={generateNewAvatar}
                 disabled={isLoading}
               >
-                  Generate New Avatar
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={generateNewAvatar}
+                disabled={isLoading}
+              >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Take Photo
               </Button>
           </div>
         </div>
