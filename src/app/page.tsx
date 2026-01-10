@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo } from 'react';
 import Image from 'next/image';
@@ -9,9 +8,6 @@ import { collection, query, orderBy } from 'firebase/firestore';
 import type { Item } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
 
 export default function Home() {
   const firestore = useFirestore();
