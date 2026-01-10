@@ -51,7 +51,7 @@
     {
       "id": "about-student-tablet",
       "description": "A group of diverse students collaborating and helping each other on a campus.",
-      "imageUrl": "https://images.unsplash.com/photo-1760348082270-3a46a3512850?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzdHVkZW50cyUyMGhlbHBpbmd8ZW58MHx8fHwxNzY4MDIxMjc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1758525861699-bde56139611f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzdHVkZW50cyUyMGhlbHBpbmd8ZW58MHx8fHwxNzY4MDIxMjc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "students helping"
     },
     {
@@ -69,13 +69,13 @@
     {
       "id": "how-it-works-connect",
       "description": "Two people messaging on their phones.",
-      "imageUrl": "https://images.unsplash.com/photo-1712839397054-f5bb6edd8fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzZWN1cmUlMjBtZXNzYWdpbmd8ZW58MHx8fHwxNzY4MDIxNjAxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1712839397054-f5bb6edd8fde?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzZWN1cmUlMjBtZXNzYWdpbmd8ZW58MHx8fHwxNzY4MDIxNjAxfDA&ixlibrb-4.1.0&q=80&w=1080",
       "imageHint": "secure messaging"
     },
     {
       "id": "how-it-works-reunite",
       "description": "A person handing a lost book back to its owner.",
-      "imageUrl": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxyZXVuaXRlJTIwaXRlbXxlbnwwfHx8fDE3NjgwOTk4MjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxyZXVuaXRlJTIwaXRlbXxlbnwwfHx8fDE3NjgwOTk4MjZ8MA&ixlib.rb-4.1.0&q=80&w=1080",
       "imageHint": "reunite item"
     }
   ]
