@@ -67,7 +67,7 @@ export default function Home() {
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
                 <Card className="overflow-hidden">
                     <CardHeader className="p-0">
-                       {reportImage && <Image src={reportImage.imageUrl} alt={reportImage.description} data-ai-hint={reportImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>}
+                       <Image src={reportImage.imageUrl} alt={reportImage.description} data-ai-hint={reportImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="flex items-center gap-4 mb-4">
@@ -83,7 +83,7 @@ export default function Home() {
                 </Card>
                 <Card className="overflow-hidden">
                     <CardHeader className="p-0">
-                        {connectImage && <Image src={connectImage.imageUrl} alt={connectImage.description} data-ai-hint={connectImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>}
+                        <Image src={connectImage.imageUrl} alt={connectImage.description} data-ai-hint={connectImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="flex items-center gap-4 mb-4">
@@ -99,7 +99,7 @@ export default function Home() {
                 </Card>
                 <Card className="overflow-hidden">
                     <CardHeader className="p-0">
-                        {reuniteImage && <Image src={reuniteImage.imageUrl} alt={reuniteImage.description} data-ai-hint={reuniteImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>}
+                        <Image src={reuniteImage.imageUrl} alt={reuniteImage.description} data-ai-hint={reuniteImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>
                     </CardHeader>
                     <CardContent className="p-6">
                          <div className="flex items-center gap-4 mb-4">
