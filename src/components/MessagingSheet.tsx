@@ -95,32 +95,46 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
     }
   };
 
+  // Determine button text when user is logged out
+  const getLoggedOutButtonText = () => {
+    if (item.status === 'Lost') return 'Contact Owner'; // Someone lost an item, contact them
+    if (item.status === 'Found') return 'Contact Finder'; // Someone found an item, contact them
+    return 'View Details'; // Fallback for resolved or other statuses
+  };
+
+
   // Render a login button if user is not logged in
   if (!user) {
-    const buttonText = item.status === 'Lost' ? 'Contact Finder' : 'Contact Owner';
     return (
       <Button asChild className="w-full">
           <Link href="/login">
             <MessageSquare className="mr-2 h-4 w-4" />
-            Log in to {buttonText}
+            Log in to {getLoggedOutButtonText()}
           </Link>
       </Button>
     );
   }
 
-  // Logic for button text and state
+  // Logic for button text and state when user is logged in
   let buttonText: string;
   let buttonDisabled = false;
   
   if (isOwner) {
-    if (item.status === 'Found') {
-        buttonText = 'View Messages'; // As finder, you view messages
-    } else { // status is 'Lost' or 'Resolved'
-        buttonText = 'This is your item';
-        buttonDisabled = true;
+    if (item.status === 'Resolved') {
+      buttonText = 'Item Resolved';
+      buttonDisabled = true;
+    } else {
+      buttonText = 'View Messages'; // Owner can always view messages
     }
-  } else {
-      buttonText = item.status === 'Lost' ? 'Contact Owner' : 'Contact Finder';
+  } else { // Not the owner
+    if (item.status === 'Lost') {
+      buttonText = 'Contact Owner';
+    } else if (item.status === 'Found') {
+      buttonText = 'Contact Finder';
+    } else { // Resolved
+      buttonText = 'Item Resolved';
+      buttonDisabled = true;
+    }
   }
 
 
