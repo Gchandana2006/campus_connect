@@ -77,7 +77,12 @@
         },
         "status": {
           "type": "string",
-          "description": "The status of the item (Lost/Found/Resolved)."
+          "description": "The status of the item (Lost/Found/Resolved).",
+          "enum": [
+            "Lost",
+            "Found",
+            "Resolved"
+          ]
         },
         "createdAt": {
             "type": "string",

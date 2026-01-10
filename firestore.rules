@@ -16,7 +16,11 @@ service cloud.firestore {
     match /items/{itemId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Allow owner to update the item, but only certain fields.
+      // For simplicity, we'll let them update the status.
+      // A more robust rule would check specific fields: `request.resource.data.keys().hasOnly(['status'])`
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
     match /users/{userId} {

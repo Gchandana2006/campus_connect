@@ -3,21 +3,28 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import type { Item } from '@/lib/types';
-import { Loader2, Calendar, MapPin, Tag, User } from 'lucide-react';
+import { Loader2, Calendar, MapPin, Tag, User, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessagingSheet } from '@/components/MessagingSheet';
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ItemDetailPage() {
   const params = React.use(useParams());
   const id = params.id as string;
   const firestore = useFirestore();
+  const { user: currentUser } = useUser();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = React.useState(false);
 
   const itemRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -25,6 +32,36 @@ export default function ItemDetailPage() {
   }, [firestore, id]);
 
   const { data: item, isLoading, error } = useDoc<Item>(itemRef);
+  
+  const handleMarkAsResolved = async () => {
+    if (!itemRef) return;
+    setIsUpdating(true);
+    try {
+      await updateDoc(itemRef, { status: 'Resolved' });
+      toast({
+        title: 'Item Updated!',
+        description: 'The item has been marked as Resolved.',
+      });
+    } catch (error) {
+      console.error('Error updating item status:', error);
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: itemRef.path,
+          operation: 'update',
+          requestResourceData: { status: 'Resolved' },
+        })
+      );
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: 'You do not have permission to perform this action or an error occurred.',
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -73,6 +110,8 @@ export default function ItemDetailPage() {
   
   const posterName = item.user?.name || 'Campus User';
   const posterAvatarUrl = item.user?.avatarUrl || `https://picsum.photos/seed/${item.userId}/100/100`;
+  const isOwner = currentUser?.uid === item.userId;
+
 
   return (
     <div className="container mx-auto max-w-4xl py-8">
@@ -131,6 +170,17 @@ export default function ItemDetailPage() {
             </div>
           </div>
           
+            {isOwner && item.status !== 'Resolved' && (
+            <Button onClick={handleMarkAsResolved} disabled={isUpdating}>
+              {isUpdating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle className="mr-2 h-4 w-4" />
+              )}
+              Mark as Resolved
+            </Button>
+          )}
+
           <MessagingSheet item={item} />
 
         </div>
