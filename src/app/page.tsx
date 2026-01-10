@@ -25,6 +25,10 @@ export default function Home() {
   const { data: items, isLoading, error } = useCollection<Item>(itemsQuery);
 
   const heroImage = PlaceHolderImages.find(p => p.id === 'hero-campus')!;
+  const reportImage = PlaceHolderImages.find(p => p.id === 'how-it-works-report')!;
+  const connectImage = PlaceHolderImages.find(p => p.id === 'how-it-works-connect')!;
+  const reuniteImage = PlaceHolderImages.find(p => p.id === 'how-it-works-reunite')!;
+
 
   return (
     <>
@@ -61,40 +65,49 @@ export default function Home() {
                 Finding or reporting an item is just a few clicks away.
             </p>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                <Card>
-                    <CardHeader className="flex flex-row items-center gap-4">
-                        <div className="bg-primary/10 text-primary p-3 rounded-full">
-                            <FilePenLine className="h-6 w-6" />
-                        </div>
-                        <CardTitle className="font-headline text-xl">1. Report an Item</CardTitle>
+                <Card className="overflow-hidden">
+                    <CardHeader className="p-0">
+                       {reportImage && <Image src={reportImage.imageUrl} alt={reportImage.description} data-ai-hint={reportImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>}
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 text-primary p-3 rounded-full">
+                                <FilePenLine className="h-6 w-6" />
+                            </div>
+                            <CardTitle className="font-headline text-xl">1. Report an Item</CardTitle>
+                        </div>
                         <p className="text-muted-foreground">
                             Lost something? Found something? Post an item in seconds. Upload a photo and our AI will help you write a description.
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center gap-4">
-                        <div className="bg-primary/10 text-primary p-3 rounded-full">
-                            <MessageSquare className="h-6 w-6" />
-                        </div>
-                        <CardTitle className="font-headline text-xl">2. Connect Securely</CardTitle>
+                <Card className="overflow-hidden">
+                    <CardHeader className="p-0">
+                        {connectImage && <Image src={connectImage.imageUrl} alt={connectImage.description} data-ai-hint={connectImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>}
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-6">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 text-primary p-3 rounded-full">
+                                <MessageSquare className="h-6 w-6" />
+                            </div>
+                            <CardTitle className="font-headline text-xl">2. Connect Securely</CardTitle>
+                        </div>
                         <p className="text-muted-foreground">
                             Use our secure messaging system to communicate with the owner or finder without sharing personal contact information.
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center gap-4">
-                        <div className="bg-primary/10 text-primary p-3 rounded-full">
-                            <CheckCircle className="h-6 w-6" />
-                        </div>
-                        <CardTitle className="font-headline text-xl">3. Reunite & Resolve</CardTitle>
+                <Card className="overflow-hidden">
+                    <CardHeader className="p-0">
+                        {reuniteImage && <Image src={reuniteImage.imageUrl} alt={reuniteImage.description} data-ai-hint={reuniteImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>}
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-6">
+                         <div className="flex items-center gap-4 mb-4">
+                            <div className="bg-primary/10 text-primary p-3 rounded-full">
+                                <CheckCircle className="h-6 w-6" />
+                            </div>
+                            <CardTitle className="font-headline text-xl">3. Reunite & Resolve</CardTitle>
+                        </div>
                         <p className="text-muted-foreground">
                             Arrange a safe meetup on campus. Once the item is returned, mark it as resolved to update the community.
                         </p>
