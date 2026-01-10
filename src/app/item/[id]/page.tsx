@@ -12,9 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessagingSheet } from '@/components/MessagingSheet';
+import React from 'react';
 
 export default function ItemDetailPage() {
-  const params = useParams();
+  const params = React.use(useParams());
   const id = params.id as string;
   const firestore = useFirestore();
 
