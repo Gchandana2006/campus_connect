@@ -1,8 +1,7 @@
-
 // src/app/about/page.tsx
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, ShieldCheck, Users, FilePenLine, Search, Handshake } from 'lucide-react';
+import { Award, ShieldCheck, Users, FilePenLine, Handshake } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function AboutPage() {
