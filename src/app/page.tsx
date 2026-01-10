@@ -39,6 +39,7 @@ export default function Home() {
           fill
           className="object-cover"
           data-ai-hint={heroImage.imageHint}
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-2xl px-4">
