@@ -1,7 +1,7 @@
 // src/components/UpdateAvatarDialog.tsx
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,52 +22,25 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB limit for initial upload
-const AVATAR_DIMENSION = 128; // Resize to 128x128 pixels
-const JPEG_QUALITY = 0.7; // Use 70% quality
-const MAX_DATA_URI_LENGTH = 32000; // Firebase photoURL limit is ~32KB
 
 export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [newAvatarSeed, setNewAvatarSeed] = useState('');
   
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const resizeImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = document.createElement('img');
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          canvas.width = AVATAR_DIMENSION;
-          canvas.height = AVATAR_DIMENSION;
-          
-          const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-          const x = (canvas.width / 2) - (img.width / 2) * scale;
-          const y = (canvas.height / 2) - (img.height / 2) * scale;
-          ctx!.drawImage(img, x, y, img.width * scale, img.height * scale);
+  useEffect(() => {
+    if (open) {
+      // Generate a new random seed when the dialog is opened
+      setNewAvatarSeed(Math.random().toString(36).substring(7));
+    }
+  }, [open]);
 
-          const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
-
-          if (dataUrl.length > MAX_DATA_URI_LENGTH) {
-            reject(new Error('Resized image is still too large. Please try a different image.'));
-          } else {
-            resolve(dataUrl);
-          }
-        };
-        img.onerror = reject;
-      };
-      reader.onerror = reject;
-    });
-  };
 
   const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -81,22 +54,9 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
       });
       return;
     }
-
-    try {
-        setIsLoading(true);
-        const resizedDataUrl = await resizeImage(file);
-        setImagePreview(resizedDataUrl);
-    } catch (error: any) {
-        console.error("Image processing failed:", error);
-        toast({
-            variant: "destructive",
-            title: "Error processing image",
-            description: error.message || "Could not process the selected image. Please try another one.",
-        });
-        setImagePreview(null);
-    } finally {
-        setIsLoading(false);
-    }
+    
+    // Use the picsum seed as the preview
+    setImagePreview(`https://picsum.photos/seed/${newAvatarSeed}/128/128`);
   };
 
   const handleSave = async () => {
@@ -104,13 +64,14 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No user or image selected.',
+        description: 'No new image has been selected.',
       });
       return;
     }
 
     setIsLoading(true);
     try {
+      // Use the valid picsum.photos URL for the profile update
       await updateProfile(user, { photoURL: imagePreview });
       toast({
         title: 'Profile Picture Updated!',
@@ -144,7 +105,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Upload a new image. It will be resized and optimized for your profile.
+            Choose a new image to generate a new avatar for your profile.
           </DialogDescription>
         </DialogHeader>
         
