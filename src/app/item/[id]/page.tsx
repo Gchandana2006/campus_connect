@@ -19,7 +19,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ItemDetailPage() {
-  const params = React.use(useParams());
+  const params = useParams();
   const id = params.id as string;
   const firestore = useFirestore();
   const { user: currentUser } = useUser();
