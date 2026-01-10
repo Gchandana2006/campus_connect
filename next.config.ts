@@ -48,12 +48,6 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.srit.ac.in',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'images.shiksha.com',
         port: '',
         pathname: '/**',
@@ -66,7 +60,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.collegebatch.com',
+        hostname: 'www.srit.ac.in',
         port: '',
         pathname: '/**',
       },
