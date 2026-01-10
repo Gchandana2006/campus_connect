@@ -7,11 +7,9 @@ import { FilterControls } from '@/components/FilterControls';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Item } from '@/lib/types';
-import { Loader2, FilePenLine, MessageSquare, CheckCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
 
 export default function Home() {
   const firestore = useFirestore();
@@ -47,10 +45,10 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-2xl px-4">
           <h1 className="text-4xl md:text-5xl font-bold font-headline drop-shadow-md">
-            University Lost & Found Portal
+            Lost an item? Found an item?
           </h1>
           <p className="mt-4 text-lg md:text-xl drop-shadow">
-            Helping students reconnect with their lost belongings with ease
+            We are here to help you find your lost item.
           </p>
           <Button size="lg" className="mt-8" onClick={handleLearnMoreClick}>
             Learn More
@@ -62,28 +60,28 @@ export default function Home() {
         <div className="container mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-primary">How It Works</h2>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                Three simple steps to reconnect with your lost items.
+                Finding your lost item is just a few clicks away
             </p>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
                 <div className="flex flex-col items-center">
                     <Image src={reportImage.imageUrl} alt={reportImage.description} data-ai-hint={reportImage.imageHint} width={128} height={128} className="w-32 h-32 object-cover rounded-full mb-6 border-4 border-background shadow-lg"/>
                     <h3 className="font-headline text-xl font-bold mb-2">Report an Item</h3>
                     <p className="text-muted-foreground">
-                        Lost or found something? Fill out a simple form to upload details of the item.
+                        Provide the details of the item you have lost or found.
                     </p>
                 </div>
                 <div className="flex flex-col items-center">
                     <Image src={connectImage.imageUrl} alt={connectImage.description} data-ai-hint={connectImage.imageHint} width={128} height={128} className="w-32 h-32 object-cover rounded-full mb-6 border-4 border-background shadow-lg"/>
-                    <h3 className="font-headline text-xl font-bold mb-2">Connect Securely</h3>
+                    <h3 className="font-headline text-xl font-bold mb-2">Connect with People</h3>
                     <p className="text-muted-foreground">
-                        Filter through items and use our secure messaging to connect with the owner or finder.
+                       Connect with people who have found your item.
                     </p>
                 </div>
                 <div className="flex flex-col items-center">
                     <Image src={reuniteImage.imageUrl} alt={reuniteImage.description} data-ai-hint={reuniteImage.imageHint} width={128} height={128} className="w-32 h-32 object-cover rounded-full mb-6 border-4 border-background shadow-lg"/>
-                     <h3 className="font-headline text-xl font-bold mb-2">Reclaim Your Item</h3>
+                     <h3 className="font-headline text-xl font-bold mb-2">Get Your Item Back</h3>
                     <p className="text-muted-foreground">
-                        Arrange a safe handover on campus. Once returned, mark the item as resolved.
+                        Get your item back from the person who found it.
                     </p>
                 </div>
             </div>
