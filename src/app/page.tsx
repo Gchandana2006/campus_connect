@@ -7,11 +7,12 @@ import { FilterControls } from '@/components/FilterControls';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Item } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FilePenLine, MessageSquare, CheckCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { PostItemDialog } from '@/components/PostItemDialog';
-import { FilePenLine } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 
 export default function Home() {
   const firestore = useFirestore();
@@ -50,6 +51,56 @@ export default function Home() {
                 Report an Item
               </Button>
           </PostItemDialog>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-24 bg-background">
+        <div className="container mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold font-headline text-primary">How It Works</h2>
+            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+                Finding or reporting an item is just a few clicks away.
+            </p>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                <Card>
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <div className="bg-primary/10 text-primary p-3 rounded-full">
+                            <FilePenLine className="h-6 w-6" />
+                        </div>
+                        <CardTitle className="font-headline text-xl">1. Report an Item</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">
+                            Lost something? Found something? Post an item in seconds. Upload a photo and our AI will help you write a description.
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <div className="bg-primary/10 text-primary p-3 rounded-full">
+                            <MessageSquare className="h-6 w-6" />
+                        </div>
+                        <CardTitle className="font-headline text-xl">2. Connect Securely</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">
+                            Use our secure messaging system to communicate with the owner or finder without sharing personal contact information.
+                        </p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <div className="bg-primary/10 text-primary p-3 rounded-full">
+                            <CheckCircle className="h-6 w-6" />
+                        </div>
+                        <CardTitle className="font-headline text-xl">3. Reunite & Resolve</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">
+                            Arrange a safe meetup on campus. Once the item is returned, mark it as resolved to update the community.
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
       </section>
 
