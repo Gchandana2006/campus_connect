@@ -10,7 +10,6 @@ import type { Item } from '@/lib/types';
 import { Loader2, FilePenLine, MessageSquare, CheckCircle } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { PostItemDialog } from '@/components/PostItemDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
@@ -43,7 +42,6 @@ export default function Home() {
           fill
           className="object-cover"
           data-ai-hint={heroImage.imageHint}
-          sizes="100vw"
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-2xl px-4">
