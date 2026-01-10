@@ -49,9 +49,10 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
 
 
   const messagesQuery = useMemoFirebase(() => {
-    if (!firestore || !item?.id) return null;
+    // Only fetch messages if the user is logged in
+    if (!firestore || !item?.id || !user) return null;
     return query(collection(firestore, `items/${item.id}/messages`), orderBy('createdAt', 'asc'));
-  }, [firestore, item?.id]);
+  }, [firestore, item?.id, user]);
 
   const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
   
