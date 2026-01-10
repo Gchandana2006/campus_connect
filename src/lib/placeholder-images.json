@@ -27,13 +27,13 @@
     {
       "id": "lost-headphones",
       "description": "A pair of wireless headphones.",
-      "imageUrl": "https://images.unsplash.com/photo-1628202926206-c63a34b1618f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxoZWFkcGhvbmVzfGVufDB8fHx8MTc2ODAwNzU4Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1628202926206-c63a34b1618f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxoZWFkcGhvbmVzfGVufDB8fHx8MTc2ODAwNzU4Nnww&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "headphones"
     },
     {
       "id": "found-hoodie",
       "description": "A folded black hoodie.",
-      "imageUrl": "https://images.unsplash.com/photo-1677538537484-324385aff147?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxibGFjayUyMGhvb2RpZXxlbnwwfHx8fDE3Njc5NzQwNDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1677538537484-324385aff147?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxibGFjayUyMGhvb2RpZXxlbnwwfHx8fDE3Njc5NzQwNDF8MA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "black hoodie"
     },
     {
@@ -57,7 +57,7 @@
     {
       "id": "hero-campus",
       "description": "Srinivasa Ramanujan Institute of Technology, Anantapur",
-      "imageUrl": "https://www.collegebatch.com/static/clg-gallery/srinivasa-ramanujan-institute-of-technology-anantapur-273731.jpg",
+      "imageUrl": "https://images.static-collegedunia.com/public/college_data/images/campusimage/1440854897srit-building.jpg",
       "imageHint": "college campus"
     },
     {
