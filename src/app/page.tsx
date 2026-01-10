@@ -27,7 +27,7 @@ export default function Home() {
 
   return (
     <>
-      <section className="relative h-[50vh] w-full">
+      <section className="relative h-[50vh] w-full mt-8">
         <Image
           src={heroImage.imageUrl}
           alt={heroImage.description}
