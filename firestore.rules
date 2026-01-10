@@ -16,13 +16,15 @@ service cloud.firestore {
     function isItemOwner(itemId) {
       return isSignedIn() && get(/databases/$(database)/documents/items/$(itemId)).data.userId == request.auth.uid;
     }
+
+    // New helper function to check if the requesting user has participated in the conversation.
+    function isMessageParticipant(itemId) {
+        return isSignedIn() && exists(/databases/$(database)/documents/items/$(itemId)/messages?userId=$(request.auth.uid));
+    }
     
     match /items/{itemId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      // Allow owner to update the item, but only certain fields.
-      // For simplicity, we'll let them update the status.
-      // A more robust rule would check specific fields: `request.resource.data.keys().hasOnly(['status'])`
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
@@ -33,13 +35,15 @@ service cloud.firestore {
       allow update: if isOwner(userId);
     }
     
-    // Only the item owner and message sender should be able to see messages.
-    // For now, let's restrict read access to the item owner for simplicity.
-    // A more complex implementation could allow any participant to read.
+    // A user can read messages if they own the item OR have sent a message.
+    // This allows both parties in a conversation to see it.
     match /items/{itemId}/messages/{messageId} {
-        allow read: if isItemOwner(itemId);
+        // To list messages, you need to be the owner or have sent a message.
+        allow list: if isItemOwner(itemId) || isMessageParticipant(itemId);
+        // To read a specific message, you must be the owner or the sender of that message.
+        allow get: if isItemOwner(itemId) || resource.data.senderId == request.auth.uid;
+        // Anyone signed in can send a message to the item owner.
         allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
-        // In a real app, you might want more complex rules, e.g., only item owner and one other party can message.
     }
   }
 }
