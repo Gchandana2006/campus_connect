@@ -24,43 +24,43 @@ export function ItemCard({ item }: ItemCardProps) {
   const timeAgo = formatDistanceToNow(date, { addSuffix: true });
 
   return (
-    <Link href={`/item/${item.id}`} className="block h-full">
-        <Card className="flex flex-col overflow-hidden h-full transform transition-transform duration-300 hover:scale-105 hover:shadow-xl">
-        <CardHeader className="p-0 relative">
-            <Image
-            src={item.imageUrl}
-            alt={item.name}
-            width={600}
-            height={400}
-            className="aspect-[3/2] w-full object-cover"
-            data-ai-hint={item.imageHint}
-            />
-            <Badge variant={statusVariant} className="absolute top-2 right-2 text-white">
-            {item.status}
-            </Badge>
-        </CardHeader>
-        <CardContent className="p-4 flex-grow">
-            <CardTitle className="text-lg font-headline mb-2">{item.name}</CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{item.description}</p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    <span>{item.category}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{item.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{timeAgo}</span>
-                </div>
-            </div>
-        </CardContent>
-        <CardFooter className="p-4 pt-0">
-            <MessagingSheet item={item} />
-        </CardFooter>
-        </Card>
+    <Card className="flex flex-col overflow-hidden h-full transform transition-transform duration-300 hover:scale-105 hover:shadow-xl">
+    <Link href={`/item/${item.id}`} className="block">
+      <CardHeader className="p-0 relative">
+          <Image
+          src={item.imageUrl}
+          alt={item.name}
+          width={600}
+          height={400}
+          className="aspect-[3/2] w-full object-cover"
+          data-ai-hint={item.imageHint}
+          />
+          <Badge variant={statusVariant} className="absolute top-2 right-2 text-white">
+          {item.status}
+          </Badge>
+      </CardHeader>
+      <CardContent className="p-4 flex-grow">
+          <CardTitle className="text-lg font-headline mb-2">{item.name}</CardTitle>
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{item.description}</p>
+          <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  <span>{item.category}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{item.location}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{timeAgo}</span>
+              </div>
+          </div>
+      </CardContent>
     </Link>
+    <CardFooter className="p-4 pt-0">
+        <MessagingSheet item={item} />
+    </CardFooter>
+    </Card>
   );
 }
