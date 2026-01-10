@@ -24,7 +24,7 @@ export default function Home() {
 
   const { data: items, isLoading, error } = useCollection<Item>(itemsQuery);
 
-  const heroImage = PlaceHolderImages.find(p => p.id === 'about-student-tablet')!;
+  const heroImage = PlaceHolderImages.find(p => p.id === 'hero-campus')!;
   const reportImage = PlaceHolderImages.find(p => p.id === 'how-it-works-report')!;
   const connectImage = PlaceHolderImages.find(p => p.id === 'how-it-works-connect')!;
   const reuniteImage = PlaceHolderImages.find(p => p.id === 'how-it-works-reunite')!;
@@ -42,7 +42,6 @@ export default function Home() {
           fill
           className="object-cover"
           data-ai-hint={heroImage.imageHint}
-          priority
         />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-2xl px-4">
