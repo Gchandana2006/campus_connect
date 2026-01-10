@@ -32,7 +32,7 @@ export default function Home() {
 
   return (
     <>
-      <section className="relative h-[50vh] w-full">
+      <section className="relative h-[50vh] w-full flex items-center justify-center text-center text-white">
         <Image
           src={heroImage.imageUrl}
           alt={heroImage.description}
@@ -40,6 +40,21 @@ export default function Home() {
           className="object-cover"
           data-ai-hint={heroImage.imageHint}
         />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 max-w-2xl px-4">
+          <h1 className="text-4xl md:text-5xl font-bold font-headline drop-shadow-md">
+            Lost Something? Found Something?
+          </h1>
+          <p className="mt-4 text-lg md:text-xl drop-shadow">
+            Campus Connect helps you reunite with your lost belongings.
+          </p>
+          <PostItemDialog>
+            <Button size="lg" className="mt-8">
+              <FilePenLine />
+              Report an Item
+            </Button>
+          </PostItemDialog>
+        </div>
       </section>
 
       <section className="py-16 md:py-24 bg-background">
