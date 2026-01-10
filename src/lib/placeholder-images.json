@@ -51,14 +51,14 @@
     {
       "id": "about-student-tablet",
       "description": "A group of diverse students collaborating and helping each other on a campus.",
-      "imageUrl": "https://images.unsplash.com/photo-1543269865-cbf427effbad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzdHVkZW50cyUyMGhlbHBpbmd8ZW58MHx8fHwxNzY4MDIxMjc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1760348082270-3a46a3512850?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzdHVkZW50cyUyMGhlbHBpbmd8ZW58MHx8fHwxNzY4MDIxMjc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "students helping"
     },
     {
       "id": "hero-campus",
       "description": "A beautiful university campus with a clock tower.",
-      "imageUrl": "https://images.unsplash.com/photo-1689686610856-3bcf921eb1f0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx1bml2ZXJzaXR5JTIwY2FtcHVzfGVufDB8fHx8MTc2ODAyMTIxOXww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "university campus"
+      "imageUrl": "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjb2xsZWdlJTIwY2FtcHVzfGVufDB8fHx8MTc2Nzk3Nzk1NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "college campus"
     },
     {
       "id": "how-it-works-report",
