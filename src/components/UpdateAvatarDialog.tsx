@@ -35,29 +35,16 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // When the dialog opens, generate a new random seed for the placeholder.
+    // This gives the user a new, predictable avatar to choose.
     if (open) {
-      // Generate a new random seed when the dialog is opened
-      setNewAvatarSeed(Math.random().toString(36).substring(7));
+      const seed = Math.random().toString(36).substring(7);
+      setNewAvatarSeed(seed);
+      // Set the preview to the image that will be used if they save.
+      setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
     }
   }, [open]);
 
-
-  const handleFileSelect = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        variant: 'destructive',
-        title: 'Image too large',
-        description: `Please select an image smaller than ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB.`,
-      });
-      return;
-    }
-    
-    // Use the picsum seed as the preview
-    setImagePreview(`https://picsum.photos/seed/${newAvatarSeed}/128/128`);
-  };
 
   const handleSave = async () => {
     if (!user || !imagePreview) {
@@ -71,8 +58,10 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
 
     setIsLoading(true);
     try {
-      // Use the valid picsum.photos URL for the profile update
+      // Use the valid picsum.photos URL for the profile update. This URL is a
+      // public HTTPS URL, which is what updateProfile expects.
       await updateProfile(user, { photoURL: imagePreview });
+
       toast({
         title: 'Profile Picture Updated!',
         description: 'Your new avatar has been saved.',
@@ -92,8 +81,10 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
   };
   
   const handleOpenChange = (isOpen: boolean) => {
+    // Reset state when dialog is closed
     if (!isOpen) {
       setImagePreview(null);
+      setNewAvatarSeed('');
     }
     setOpen(isOpen);
   }
@@ -105,7 +96,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Choose a new image to generate a new avatar for your profile.
+            Generate a new random avatar for your profile.
           </DialogDescription>
         </DialogHeader>
         
@@ -133,24 +124,19 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Choose Image
-              </Button>
-              <Button variant="outline" disabled>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Take Photo
+          <div className="text-center">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  const seed = Math.random().toString(36).substring(7);
+                  setNewAvatarSeed(seed);
+                  setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
+                }} 
+                disabled={isLoading}
+              >
+                  Generate New Avatar
               </Button>
           </div>
-          <Input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/png, image/jpeg, image/gif"
-            onChange={handleFileSelect}
-            disabled={isLoading}
-          />
         </div>
 
         <DialogFooter className="sm:justify-between gap-2">
