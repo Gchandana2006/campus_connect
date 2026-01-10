@@ -21,7 +21,7 @@
     {
       "id": "found-id",
       "description": "A generic ID card.",
-      "imageUrl": "https://images.unsplash.com/photo-1587045930305-4875b26e8f25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxJRCUyMGNhcmR8ZW58MHx8fHwxNzY4MDIxNjAwfDA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1587045930305-4875b26e8f25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxJRCUyMGNhcmR8ZW58MHx8fHwxNzY4MDIxNjAwfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "ID card"
     },
     {
@@ -51,19 +51,19 @@
     {
       "id": "about-student-tablet",
       "description": "A group of diverse students collaborating and helping each other on a campus.",
-      "imageUrl": "https://images.unsplash.com/photo-1758525860449-fa3602fceb31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzdHVkZW50cyUyMGhlbHBpbmd8ZW58MHx8fHwxNzY4MDIxMjc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1758525860449-fa3602fceb31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxzdHVkZW50cyUyMGhlbHBpbmd8ZW58MHx8fHwxNzY4MDIxMjc2fDA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "students helping"
     },
     {
       "id": "hero-campus",
       "description": "SRIT College, Ananthapuramu",
-      "imageUrl": "https://allegiance-educare.in/college/srinivasa-ramanujan-institute-of-technology-srit",
+      "imageUrl": "https://images.static-collegedunia.com/public/college_data/images/campusimage/1441882583srit.jpg",
       "imageHint": "college campus"
     },
     {
       "id": "how-it-works-report",
       "description": "A person taking a picture of a lost wallet on a bench.",
-      "imageUrl": "https://images.unsplash.com/photo-1618225247076-563e46c75a93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxyZXBvcnQlMjBpdGVtfGVufDB8fHx8MTc2ODA5OTc4Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1618225247076-563e46c75a93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxyZXBvcnQlMjBpdGVtfGVufDB8fHx8MTc2ODA5OTc4Nnww&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "report item"
     },
     {
