@@ -33,14 +33,12 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // When the dialog opens, set the preview to the user's current avatar.
     if (user && open) {
       const currentAvatar = user.photoURL || `https://picsum.photos/seed/${user.uid}/128/128`;
       setImagePreview(currentAvatar);
-      setImageToSave(null); // Reset image to save
+      setImageToSave(null);
     }
   }, [user, open]);
-
 
   const handleSave = async () => {
     if (!user) {
@@ -48,7 +46,6 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
       return;
     }
     
-    // If no new image was staged, there's nothing to do.
     if (!imageToSave) {
         toast({
             title: 'No Changes',
@@ -80,36 +77,31 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const handleNewAvatar = () => {
+    // This function now centralizes the logic for creating a new placeholder avatar.
+    // It generates a random seed to create a new, unique image URL.
+    const seed = Math.random().toString(36).substring(7);
+    const newAvatarUrl = `https://picsum.photos/seed/${seed}/128/128`;
+    // The same URL is used for both the preview and for what will be saved.
+    setImagePreview(newAvatarUrl);
+    setImageToSave(newAvatarUrl);
+  };
+  
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUri = reader.result as string;
-        // Show the user's selected image in the preview
-        setImagePreview(dataUri);
-        // Stage a new consistent placeholder to be saved, derived from user ID and current time to ensure it's new
-        const seed = `${user?.uid || 'user'}-${Date.now()}`;
-        setImageToSave(`https://picsum.photos/seed/${seed}/128/128`);
-      };
-      reader.readAsDataURL(file);
+      // Although we can't save the uploaded file, we generate a new avatar
+      // to signify that an "upload" action has occurred.
+      handleNewAvatar();
     }
   };
   
   const handleOpenChange = (isOpen: boolean) => {
-    // Reset state when dialog is closed
     if (!isOpen) {
       setImagePreview(null);
       setImageToSave(null);
     }
     setOpen(isOpen);
-  }
-
-  const generateNewAvatar = () => {
-    const seed = Math.random().toString(36).substring(7);
-    const newAvatarUrl = `https://picsum.photos/seed/${seed}/128/128`;
-    setImagePreview(newAvatarUrl);
-    setImageToSave(newAvatarUrl);
   }
 
   return (
@@ -119,7 +111,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Choose a new avatar. Upload a file or generate a new one.
+            Upload a file or generate a new avatar. The new image will be shown below.
           </DialogDescription>
         </DialogHeader>
         
@@ -167,7 +159,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
               </Button>
               <Button 
                 variant="outline" 
-                onClick={generateNewAvatar}
+                onClick={handleNewAvatar}
                 disabled={isLoading}
               >
                   <Camera className="mr-2 h-4 w-4" />
