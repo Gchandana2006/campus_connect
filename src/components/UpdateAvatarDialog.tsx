@@ -37,24 +37,29 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
     if (user && open) {
       const currentAvatar = user.photoURL || `https://picsum.photos/seed/${user.uid}/128/128`;
       setImagePreview(currentAvatar);
-      setImageToSave(currentAvatar);
+      setImageToSave(null); // Reset image to save
     }
   }, [user, open]);
 
 
   const handleSave = async () => {
-    if (!user || !imageToSave) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'No new image has been selected.',
-      });
+    if (!user) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in.' });
       return;
+    }
+    
+    // If no new image was staged, there's nothing to do.
+    if (!imageToSave) {
+        toast({
+            title: 'No Changes',
+            description: 'No new avatar was selected to save.',
+        });
+        setOpen(false);
+        return;
     }
 
     setIsLoading(true);
     try {
-      // Use the valid picsum.photos URL for the profile update.
       await updateProfile(user, { photoURL: imageToSave });
 
       toast({
@@ -81,10 +86,10 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUri = reader.result as string;
-        setImagePreview(dataUri); // Show the selected image
-        
-        // For now, we still generate a placeholder URL to save, to avoid storage requirements.
-        const seed = Math.random().toString(36).substring(7);
+        // Show the user's selected image in the preview
+        setImagePreview(dataUri);
+        // Stage a new consistent placeholder to be saved, derived from user ID and current time to ensure it's new
+        const seed = `${user?.uid || 'user'}-${Date.now()}`;
         setImageToSave(`https://picsum.photos/seed/${seed}/128/128`);
       };
       reader.readAsDataURL(file);
@@ -114,7 +119,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Choose a new avatar. Upload a file or take a new picture.
+            Choose a new avatar. Upload a file or generate a new one.
           </DialogDescription>
         </DialogHeader>
         
@@ -148,6 +153,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
             className="hidden" 
             accept="image/*"
             onChange={handleFileChange}
+            disabled={isLoading}
           />
 
           <div className="grid grid-cols-2 gap-2">
