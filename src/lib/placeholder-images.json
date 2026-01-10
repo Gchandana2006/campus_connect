@@ -9,13 +9,13 @@
     {
       "id": "found-keys",
       "description": "A set of keys on a table.",
-      "imageUrl": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxrZXlzfGVufDB8fHx8MTc2ODAyMTYwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxrZXlzfGVufDB8fHx8MTc2ODAyMTYwMHww&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "keys"
     },
     {
       "id": "lost-notebook",
       "description": "A spiral notebook and a pen.",
-      "imageUrl": "https://images.unsplash.com/photo-1685346741627-e4522822268e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxub3RlYm9vayUyMHBlbnxlbnwwfHx8fDE3NjgwMjE2MDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1685346741627-e4522822268e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxub3RlYm9vayUyMHBlbnxlbnwwfHx8fDE3NjgwMjE2MDB8MA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "notebook pen"
     },
     {
@@ -27,7 +27,7 @@
     {
       "id": "lost-headphones",
       "description": "A pair of wireless headphones.",
-      "imageUrl": "https://images.unsplash.com/photo-1628202926206-c63a34b1618f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxoZWFkcGhvbmVzfGVufDB8fHx8MTc2ODAwNzU4Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1628202926206-c63a34b1618f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxoZWFkcGhvbmVzfGVufDB8fHx8MTc2ODAwNzU4Nnww&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "headphones"
     },
     {
@@ -57,7 +57,7 @@
     {
       "id": "hero-campus",
       "description": "SRIT College, Ananthapuramu",
-      "imageUrl": "https://images.shiksha.com/mediadata/images/1743675740phpRLenTK_1280x960.jpg",
+      "imageUrl": "https://www.srit.ac.in/wp-content/uploads/2021/05/internet-img.jpg",
       "imageHint": "college campus"
     },
     {
