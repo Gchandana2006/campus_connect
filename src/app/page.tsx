@@ -62,57 +62,30 @@ export default function Home() {
         <div className="container mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-primary">How It Works</h2>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                Finding or reporting an item is just a few clicks away.
+                Three simple steps to reconnect with your lost items.
             </p>
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                <Card className="overflow-hidden">
-                    <CardHeader className="p-0">
-                       <Image src={reportImage.imageUrl} alt={reportImage.description} data-ai-hint={reportImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 text-primary p-3 rounded-full">
-                                <FilePenLine className="h-6 w-6" />
-                            </div>
-                            <CardTitle className="font-headline text-xl">1. Report an Item</CardTitle>
-                        </div>
-                        <p className="text-muted-foreground">
-                            Lost something? Found something? Post an item in seconds. Upload a photo and our AI will help you write a description.
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="overflow-hidden">
-                    <CardHeader className="p-0">
-                        <Image src={connectImage.imageUrl} alt={connectImage.description} data-ai-hint={connectImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 text-primary p-3 rounded-full">
-                                <MessageSquare className="h-6 w-6" />
-                            </div>
-                            <CardTitle className="font-headline text-xl">2. Connect Securely</CardTitle>
-                        </div>
-                        <p className="text-muted-foreground">
-                            Use our secure messaging system to communicate with the owner or finder without sharing personal contact information.
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="overflow-hidden">
-                    <CardHeader className="p-0">
-                        <Image src={reuniteImage.imageUrl} alt={reuniteImage.description} data-ai-hint={reuniteImage.imageHint} width={600} height={400} className="w-full h-48 object-cover"/>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                         <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-primary/10 text-primary p-3 rounded-full">
-                                <CheckCircle className="h-6 w-6" />
-                            </div>
-                            <CardTitle className="font-headline text-xl">3. Reunite & Resolve</CardTitle>
-                        </div>
-                        <p className="text-muted-foreground">
-                            Arrange a safe meetup on campus. Once the item is returned, mark it as resolved to update the community.
-                        </p>
-                    </CardContent>
-                </Card>
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
+                <div className="flex flex-col items-center">
+                    <Image src={reportImage.imageUrl} alt={reportImage.description} data-ai-hint={reportImage.imageHint} width={128} height={128} className="w-32 h-32 object-cover rounded-full mb-6 border-4 border-background shadow-lg"/>
+                    <h3 className="font-headline text-xl font-bold mb-2">Report an Item</h3>
+                    <p className="text-muted-foreground">
+                        Lost or found something? Fill out a simple form to upload details of the item.
+                    </p>
+                </div>
+                <div className="flex flex-col items-center">
+                    <Image src={connectImage.imageUrl} alt={connectImage.description} data-ai-hint={connectImage.imageHint} width={128} height={128} className="w-32 h-32 object-cover rounded-full mb-6 border-4 border-background shadow-lg"/>
+                    <h3 className="font-headline text-xl font-bold mb-2">Connect Securely</h3>
+                    <p className="text-muted-foreground">
+                        Filter through items and use our secure messaging to connect with the owner or finder.
+                    </p>
+                </div>
+                <div className="flex flex-col items-center">
+                    <Image src={reuniteImage.imageUrl} alt={reuniteImage.description} data-ai-hint={reuniteImage.imageHint} width={128} height={128} className="w-32 h-32 object-cover rounded-full mb-6 border-4 border-background shadow-lg"/>
+                     <h3 className="font-headline text-xl font-bold mb-2">Reclaim Your Item</h3>
+                    <p className="text-muted-foreground">
+                        Arrange a safe handover on campus. Once returned, mark the item as resolved.
+                    </p>
+                </div>
             </div>
         </div>
       </section>
