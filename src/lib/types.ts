@@ -21,6 +21,20 @@ export type Item = {
     updatedAt: Timestamp;
   };
   
+  export type Message = {
+    id: string;
+    senderId: string;
+    senderName: string;
+    senderAvatarUrl: string;
+    content: string;
+    createdAt: Timestamp;
+  };
+
+  export type Conversation = {
+    item: Item;
+    lastMessage: Message | null;
+  }
+  
   export const categories = [
     'Electronics',
     'Books',
