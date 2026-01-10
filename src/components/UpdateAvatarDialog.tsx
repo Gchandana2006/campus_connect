@@ -14,12 +14,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useUser } from '@/firebase';
-import { updateProfile } from 'firebase/auth';
+import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { doc, setDoc } from 'firebase/firestore';
+
+const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 
 export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -28,6 +30,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
   const [imageToSave, setImageToSave] = useState<string | null>(null);
   
   const { user } = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,9 +43,31 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
     }
   }, [user, open]);
 
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        variant: "destructive",
+        title: "Image too large",
+        description: `Please select an image smaller than ${MAX_FILE_SIZE / 1024 / 1024}MB.`
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUri = reader.result as string;
+      setImagePreview(dataUri);
+      setImageToSave(dataUri);
+    };
+    reader.readAsDataURL(file);
+  };
+  
   const handleSave = async () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in.' });
+    if (!user || !firestore) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to do this.' });
       return;
     }
     
@@ -57,7 +82,8 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
 
     setIsLoading(true);
     try {
-      await updateProfile(user, { photoURL: imageToSave });
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, { avatarDataUrl: imageToSave }, { merge: true });
 
       toast({
         title: 'Profile Picture Updated!',
@@ -76,26 +102,14 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
       setIsLoading(false);
     }
   };
-
-  const handleNewAvatar = () => {
-    // This function now centralizes the logic for creating a new placeholder avatar.
-    // It generates a random seed to create a new, unique image URL.
+  
+  const handleTakePhoto = () => {
     const seed = Math.random().toString(36).substring(7);
-    const newAvatarUrl = `https://picsum.photos/seed/${seed}/128/128`;
-    // The same URL is used for both the preview and for what will be saved.
+    const newAvatarUrl = `https://picsum.photos/seed/${seed}/256/256`;
     setImagePreview(newAvatarUrl);
     setImageToSave(newAvatarUrl);
   };
-  
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Although we can't save the uploaded file, we generate a new avatar
-      // to signify that an "upload" action has occurred.
-      handleNewAvatar();
-    }
-  };
-  
+
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       setImagePreview(null);
@@ -159,7 +173,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
               </Button>
               <Button 
                 variant="outline" 
-                onClick={handleNewAvatar}
+                onClick={handleTakePhoto}
                 disabled={isLoading}
               >
                   <Camera className="mr-2 h-4 w-4" />

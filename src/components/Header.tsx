@@ -23,19 +23,33 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PostItemDialog } from './PostItemDialog';
 import { Logo } from './icons/Logo';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { doc } from 'firebase/firestore';
+
+type UserProfile = {
+  avatarDataUrl?: string;
+};
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/messages', label: 'Messages', icon: MessageSquare },
+  { href: '/messages', label: 'My Messages', icon: MessageSquare },
   { href: '/about', label: 'About', icon: Info },
 ];
 
+
 export default function Header() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const pathname = usePathname();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   const handleLogout = () => {
     // This assumes you have access to the auth instance to sign out.
@@ -46,6 +60,10 @@ export default function Header() {
     // getAuth().signOut();
     console.log('Logout action');
   };
+
+  const isLoading = isUserLoading || isProfileLoading;
+  const avatarUrl = userProfile?.avatarDataUrl || user?.photoURL || (user ? `https://picsum.photos/seed/${user.uid}/100/100` : '');
+
 
   return (
     <header className="sticky top-0 z-50 w-full bg-primary text-primary-foreground">
@@ -84,7 +102,7 @@ export default function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {isUserLoading ? (
+          {isLoading ? (
             <div className="h-9 w-9 animate-pulse rounded-full bg-primary/20" />
           ) : user ? (
             <DropdownMenu>
@@ -92,7 +110,7 @@ export default function Header() {
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9 border-2 border-primary-foreground/50">
                     <AvatarImage
-                      src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`}
+                      src={avatarUrl}
                       alt={user.displayName || 'User'}
                     />
                     <AvatarFallback>{user.email?.[0].toUpperCase() || 'U'}</AvatarFallback>

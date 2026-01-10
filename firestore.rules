@@ -20,7 +20,9 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
     }
     
     // Allow users to read/write messages for an item if they are the item owner or involved in the conversation.

@@ -24,6 +24,10 @@
           "type": "string",
           "description": "The date and time the user registered.",
           "format": "date-time"
+        },
+        "avatarDataUrl": {
+          "type": "string",
+          "description": "A base64-encoded data URI of the user's custom avatar image."
         }
       },
       "required": [
