@@ -1,6 +1,6 @@
 
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { ItemList } from '@/components/ItemList';
 import { FilterControls } from '@/components/FilterControls';
@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Home() {
   const firestore = useFirestore();
+  const howItWorksRef = useRef<HTMLDivElement>(null);
 
   const itemsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -29,6 +30,9 @@ export default function Home() {
   const connectImage = PlaceHolderImages.find(p => p.id === 'how-it-works-connect')!;
   const reuniteImage = PlaceHolderImages.find(p => p.id === 'how-it-works-reunite')!;
 
+  const handleLearnMoreClick = () => {
+    howItWorksRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }
 
   return (
     <>
@@ -44,21 +48,18 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-2xl px-4">
           <h1 className="text-4xl md:text-5xl font-bold font-headline drop-shadow-md">
-            Lost Something? Found Something?
+            University Lost & Found Portal
           </h1>
           <p className="mt-4 text-lg md:text-xl drop-shadow">
-            Campus Connect helps you reunite with your lost belongings.
+            Helping students reconnect with their lost belongings with ease
           </p>
-          <PostItemDialog>
-            <Button size="lg" className="mt-8">
-              <FilePenLine />
-              Report an Item
-            </Button>
-          </PostItemDialog>
+          <Button size="lg" className="mt-8" onClick={handleLearnMoreClick}>
+            Learn More
+          </Button>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-background">
+      <section ref={howItWorksRef} className="py-16 md:py-24 bg-background">
         <div className="container mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-headline text-primary">How It Works</h2>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
