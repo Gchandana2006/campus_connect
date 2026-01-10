@@ -40,21 +40,6 @@ export default function Home() {
           className="object-cover"
           data-ai-hint={heroImage.imageHint}
         />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white p-4">
-          <h1 className="text-4xl md:text-6xl font-bold font-headline">
-            Reuniting what was lost.
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-primary-foreground/90">
-            Campus Connect is the easiest way to find your lost belongings and help others find theirs.
-          </p>
-          <PostItemDialog>
-              <Button size="lg" className="mt-8">
-                <FilePenLine className="mr-2" />
-                Report an Item
-              </Button>
-          </PostItemDialog>
-        </div>
       </section>
 
       <section className="py-16 md:py-24 bg-background">
