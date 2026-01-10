@@ -40,6 +40,7 @@ export default function Home() {
           src={heroImage.imageUrl}
           alt={heroImage.description}
           fill
+          priority
           className="object-cover"
           data-ai-hint={heroImage.imageHint}
         />
