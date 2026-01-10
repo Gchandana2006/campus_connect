@@ -25,22 +25,25 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageToSave, setImageToSave] = useState<string | null>(null);
   
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // When the dialog opens, set a default preview.
-    if (open && !imagePreview) {
-        const seed = Math.random().toString(36).substring(7);
-        setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
+    // When the dialog opens, set the preview to the user's current avatar.
+    if (user && open) {
+      const currentAvatar = user.photoURL || `https://picsum.photos/seed/${user.uid}/128/128`;
+      setImagePreview(currentAvatar);
+      setImageToSave(currentAvatar);
     }
-  }, [open, imagePreview]);
+  }, [user, open]);
 
 
   const handleSave = async () => {
-    if (!user || !imagePreview) {
+    if (!user || !imageToSave) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -52,7 +55,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
     setIsLoading(true);
     try {
       // Use the valid picsum.photos URL for the profile update.
-      await updateProfile(user, { photoURL: imagePreview });
+      await updateProfile(user, { photoURL: imageToSave });
 
       toast({
         title: 'Profile Picture Updated!',
@@ -71,18 +74,37 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
       setIsLoading(false);
     }
   };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUri = reader.result as string;
+        setImagePreview(dataUri); // Show the selected image
+        
+        // For now, we still generate a placeholder URL to save, to avoid storage requirements.
+        const seed = Math.random().toString(36).substring(7);
+        setImageToSave(`https://picsum.photos/seed/${seed}/128/128`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   const handleOpenChange = (isOpen: boolean) => {
     // Reset state when dialog is closed
     if (!isOpen) {
       setImagePreview(null);
+      setImageToSave(null);
     }
     setOpen(isOpen);
   }
 
   const generateNewAvatar = () => {
     const seed = Math.random().toString(36).substring(7);
-    setImagePreview(`https://picsum.photos/seed/${seed}/128/128`);
+    const newAvatarUrl = `https://picsum.photos/seed/${seed}/128/128`;
+    setImagePreview(newAvatarUrl);
+    setImageToSave(newAvatarUrl);
   }
 
   return (
@@ -92,7 +114,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle>Change Profile Picture</DialogTitle>
           <DialogDescription>
-            Choose a new avatar for your profile. Uploading and camera features will be enabled soon.
+            Choose a new avatar. Upload a file or take a new picture.
           </DialogDescription>
         </DialogHeader>
         
@@ -119,11 +141,19 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
               ))}
             </div>
           </div>
+          
+          <Input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleFileChange}
+          />
 
           <div className="grid grid-cols-2 gap-2">
               <Button 
                 variant="outline" 
-                onClick={generateNewAvatar}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
               >
                   <Upload className="mr-2 h-4 w-4" />
@@ -146,7 +176,7 @@ export function UpdateAvatarDialog({ children }: { children: React.ReactNode }) 
               Cancel
             </Button>
           </DialogClose>
-          <Button onClick={handleSave} disabled={!imagePreview || isLoading}>
+          <Button onClick={handleSave} disabled={!imageToSave || isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save
           </Button>
