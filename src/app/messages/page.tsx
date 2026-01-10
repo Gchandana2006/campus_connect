@@ -2,12 +2,12 @@
 // src/app/messages/page.tsx
 'use client';
 
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import type { Item, Conversation } from '@/lib/types';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot, collectionGroup } from 'firebase/firestore';
+import type { Item, Conversation, Message } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, MessageSquare, User } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
@@ -28,81 +28,78 @@ export default function MessagesPage() {
     }
 
     const fetchConversations = async () => {
+      if (!firestore || !user) return;
       setIsLoading(true);
-      if (!firestore || !user) {
+
+      // 1. Get all items owned by the user
+      const ownedItemsQuery = query(collection(firestore, 'items'), where('userId', '==', user.uid));
+      const ownedItemsSnap = await getDocs(ownedItemsQuery);
+      const itemIds = new Set(ownedItemsSnap.docs.map(doc => doc.id));
+
+      // 2. Get all message threads the user has participated in
+      const messagesGroupQuery = query(collectionGroup(firestore, 'messages'), where('senderId', '==', user.uid));
+      const userMessagesSnap = await getDocs(messagesGroupQuery);
+      userMessagesSnap.forEach(msgDoc => {
+        // The item ID is the parent document's ID
+        const itemId = msgDoc.ref.parent.parent?.id;
+        if (itemId) {
+          itemIds.add(itemId);
+        }
+      });
+      
+      const uniqueItemIds = Array.from(itemIds);
+      if (uniqueItemIds.length === 0) {
         setIsLoading(false);
         return;
-      };
-
-      try {
-        // Get items where the user is the owner
-        const ownedItemsQuery = query(collection(firestore, 'items'), where('userId', '==', user.uid));
-        const ownedItemsSnapshot = await getDocs(ownedItemsQuery);
-        const ownedItemIds = ownedItemsSnapshot.docs.map(doc => doc.id);
-
-        // Get items where the user has sent a message
-        const messagesQuery = query(collection(firestore, 'items'));
-        const allItemsSnapshot = await getDocs(messagesQuery);
-        const messagedItemIds: string[] = [];
-
-        for (const itemDoc of allItemsSnapshot.docs) {
-            const messagesColRef = collection(firestore, `items/${itemDoc.id}/messages`);
-            const userMessageQuery = query(messagesColRef, where('senderId', '==', user.uid), limit(1));
-            const userMessageSnapshot = await getDocs(userMessageQuery);
-            if (!userMessageSnapshot.empty) {
-                messagedItemIds.push(itemDoc.id);
-            }
-        }
-        
-        const allInvolvedItemIds = [...new Set([...ownedItemIds, ...messagedItemIds])];
-
-        const convs: Conversation[] = [];
-        const unsubscribes = allInvolvedItemIds.map(itemId => {
-          const itemDoc = allItemsSnapshot.docs.find(doc => doc.id === itemId);
-          if (itemDoc) {
-            const itemData = { ...itemDoc.data(), id: itemDoc.id } as Item;
-            
-            const lastMessageQuery = query(collection(firestore, `items/${itemId}/messages`), orderBy('createdAt', 'desc'), limit(1));
-            
-            const unsubscribe = onSnapshot(lastMessageQuery, (messageSnapshot) => {
-              const lastMessage = messageSnapshot.empty ? null : { ...messageSnapshot.docs[0].data(), id: messageSnapshot.docs[0].id } as Conversation['lastMessage'];
-
-              setConversations(prevConvs => {
-                const existingConvIndex = prevConvs.findIndex(c => c.item.id === itemId);
-                const newConv = { item: itemData, lastMessage };
-                if (existingConvIndex > -1) {
-                  const updatedConvs = [...prevConvs];
-                  updatedConvs[existingConvIndex] = newConv;
-                  return updatedConvs.sort((a,b) => (b.lastMessage?.createdAt?.toDate()?.getTime() || 0) - (a.lastMessage?.createdAt?.toDate()?.getTime() || 0));
-                } else {
-                  const updatedConvs = [...prevConvs, newConv];
-                  return updatedConvs.sort((a,b) => (b.lastMessage?.createdAt?.toDate()?.getTime() || 0) - (a.lastMessage?.createdAt?.toDate()?.getTime() || 0));
-                }
-              });
-            });
-            return unsubscribe;
-          }
-          return () => {};
-        });
-
-        setIsLoading(false);
-        
-        return () => unsubscribes.forEach(unsub => unsub());
-
-      } catch (error) {
-        console.error("Error fetching conversations:", error);
-        setIsLoading(false);
       }
+      
+      // 3. For each unique item ID, fetch item data and last message
+      const unsubscribes = uniqueItemIds.map(itemId => {
+        const itemQuery = query(collection(firestore, 'items'), where('__name__', '==', itemId));
+
+        return onSnapshot(itemQuery, async (itemSnapshot) => {
+          if (itemSnapshot.empty) return;
+          const itemDoc = itemSnapshot.docs[0];
+          const itemData = { id: itemDoc.id, ...itemDoc.data() } as Item;
+
+          const messagesQuery = query(collection(firestore, `items/${itemId}/messages`), orderBy('createdAt', 'desc'), limit(1));
+          
+          return onSnapshot(messagesQuery, (messageSnapshot) => {
+             const lastMessage = messageSnapshot.empty ? null : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
+
+             setConversations(prev => {
+                const existingIndex = prev.findIndex(c => c.item.id === itemId);
+                const newConversation = { item: itemData, lastMessage };
+
+                let newConversations;
+                if (existingIndex > -1) {
+                    newConversations = [...prev];
+                    newConversations[existingIndex] = newConversation;
+                } else {
+                    newConversations = [...prev, newConversation];
+                }
+                // Sort by last message date
+                return newConversations.sort((a, b) => 
+                    (b.lastMessage?.createdAt?.toDate()?.getTime() || 0) - (a.lastMessage?.createdAt?.toDate()?.getTime() || 0)
+                );
+             });
+             setIsLoading(false);
+          });
+        });
+      });
+
+      return () => unsubscribes.forEach(unsub => unsub());
     };
 
-    const unsubscribe = fetchConversations();
+    const unsubscribePromise = fetchConversations();
 
     return () => {
-        if (typeof unsubscribe === 'function') {
-            unsubscribe();
-        }
+      unsubscribePromise.then(unsub => {
+        if (unsub) unsub();
+      });
     };
   }, [user, isUserLoading, firestore, router]);
+
 
   if (isLoading || isUserLoading) {
     return (

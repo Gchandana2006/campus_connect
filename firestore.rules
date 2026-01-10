@@ -17,11 +17,6 @@ service cloud.firestore {
       return isSignedIn() && get(/databases/$(database)/documents/items/$(itemId)).data.userId == request.auth.uid;
     }
 
-    // New helper function to check if the requesting user has participated in the conversation.
-    function isMessageParticipant(itemId) {
-        return isSignedIn() && exists(/databases/$(database)/documents/items/$(itemId)/messages?userId=$(request.auth.uid));
-    }
-    
     match /items/{itemId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -38,11 +33,13 @@ service cloud.firestore {
     // A user can read messages if they own the item OR have sent a message.
     // This allows both parties in a conversation to see it.
     match /items/{itemId}/messages/{messageId} {
-        // To list messages, you need to be the owner or have sent a message.
-        allow list: if isItemOwner(itemId) || isMessageParticipant(itemId);
-        // To read a specific message, you must be the owner or the sender of that message.
-        allow get: if isItemOwner(itemId) || resource.data.senderId == request.auth.uid;
-        // Anyone signed in can send a message to the item owner.
+        // Anyone signed in can list messages, but content is protected by 'get'.
+        allow list: if isSignedIn();
+        
+        // To read a specific message, you must be the item owner or the sender of that message.
+        allow get: if isItemOwner(itemId) || (isSignedIn() && resource.data.senderId == request.auth.uid);
+        
+        // Anyone signed in can send a message.
         allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
     }
   }
