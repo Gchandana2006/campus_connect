@@ -1,13 +1,38 @@
 
 // src/app/about/page.tsx
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
-import { Award, ShieldCheck, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Award, ShieldCheck, Users, FilePenLine, Search, Handshake } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function AboutPage() {
 
   const aboutImage = PlaceHolderImages.find(p => p.id === 'about-student-tablet')!;
+  const reportImage = PlaceHolderImages.find(p => p.id === 'how-it-works-report')!;
+  const connectImage = PlaceHolderImages.find(p => p.id === 'how-it-works-connect')!;
+  const reuniteImage = PlaceHolderImages.find(p => p.id === 'how-it-works-reunite')!;
+
+  const howItWorksSteps = [
+    {
+      icon: FilePenLine,
+      title: 'Report or Search',
+      description: "Quickly post details about a lost or found item. Our AI helps generate descriptions from just a photo. Or, browse the listings to see if your item has been found.",
+      image: reportImage,
+    },
+    {
+      icon: ShieldCheck,
+      title: 'Connect Securely',
+      description: 'Use our private, integrated messaging system to communicate with the finder or owner. Your personal contact information remains confidential.',
+      image: connectImage,
+    },
+    {
+      icon: Handshake,
+      title: 'Reunite Safely',
+      description: 'Arrange a safe and convenient handover at a public place on campus. Once the item is returned, mark it as resolved.',
+      image: reuniteImage,
+    },
+  ];
+
 
   return (
     <div className="container mx-auto py-12 md:py-16">
@@ -59,6 +84,36 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+
+       <section className="py-16 md:py-24">
+        <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold font-headline text-primary">How It Works</h2>
+            <p className="mt-4 text-lg text-muted-foreground">Three simple steps to reconnect with your lost items.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            {howItWorksSteps.map((step) => (
+                <Card key={step.title} className="bg-card pt-6 flex flex-col items-center">
+                    <CardHeader className="items-center p-0">
+                        <div className="relative h-32 w-32 mb-4">
+                            <Image
+                                src={step.image.imageUrl}
+                                alt={step.image.description}
+                                fill
+                                className="rounded-full object-cover border-4 border-primary/20"
+                                data-ai-hint={step.image.imageHint}
+                                sizes="128px"
+                            />
+                        </div>
+                        <CardTitle className="font-headline text-xl">{step.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground mt-2">{step.description}</p>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    </section>
+
     </div>
   );
 }
