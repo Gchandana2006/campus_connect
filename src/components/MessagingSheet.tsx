@@ -15,25 +15,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, MessageSquare, Loader2 } from 'lucide-react';
-import type { Item } from '@/lib/types';
+import type { Item, Message } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ScrollArea } from './ui/scroll-area';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import Link from 'next/link';
-import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, runTransaction, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
-interface Message {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderAvatarUrl: string;
-  content: string;
-  createdAt: {
-    toDate: () => Date;
-  };
-}
 
 interface MessagingSheetProps {
   item: Item;
@@ -51,8 +41,13 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const messagesQuery = useMemoFirebase(() => {
     // Only fetch messages if the user is logged in
     if (!firestore || !item?.id || !user) return null;
+    // And if the user is a participant (or the item has no participants yet, for the owner)
+    if (item.participants && !item.participants.includes(user.uid)) {
+        if (user.uid !== item.userId) return null;
+    }
+    
     return query(collection(firestore, `items/${item.id}/messages`), orderBy('createdAt', 'asc'));
-  }, [firestore, item?.id, user]);
+  }, [firestore, item, user]);
 
   const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
   
@@ -74,24 +69,48 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
     setIsSending(true);
 
     try {
-      const messagesCol = collection(firestore, `items/${item.id}/messages`);
-      await addDoc(messagesCol, {
-        senderId: user.uid,
-        senderName: user.displayName || 'Campus User',
-        senderAvatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`,
-        content: message,
-        createdAt: serverTimestamp(),
-      });
-      setMessage('');
+        const itemRef = doc(firestore, 'items', item.id);
+        const messagesColRef = collection(itemRef, 'messages');
+
+        await runTransaction(firestore, async (transaction) => {
+            const itemDoc = await transaction.get(itemRef);
+            if (!itemDoc.exists()) {
+                throw "Item does not exist!";
+            }
+
+            const currentItemData = itemDoc.data() as Item;
+
+            // Create the message payload
+            const newMessage = {
+                senderId: user.uid,
+                senderName: user.displayName || 'Campus User',
+                senderAvatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`,
+                content: message,
+                createdAt: serverTimestamp(),
+                isFirstMessage: false
+            };
+
+            // If this is the first message, set the participants array
+            if (!currentItemData.participants || currentItemData.participants.length === 0) {
+                const participants = [item.userId, user.uid];
+                transaction.update(itemRef, { participants });
+                newMessage.isFirstMessage = true;
+            }
+
+            // Add the new message
+            transaction.set(doc(messagesColRef), newMessage);
+        });
+
+        setMessage('');
     } catch (error: any) {
-      console.error('Error sending message:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error Sending Message',
-        description: error.message || 'Could not send your message.',
-      });
+        console.error('Error sending message:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Error Sending Message',
+            description: error.message || 'Could not send your message. You may not have permission.',
+        });
     } finally {
-      setIsSending(false);
+        setIsSending(false);
     }
   };
 
@@ -118,23 +137,32 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   // Logic for button text and state when user is logged in
   let buttonText: string;
   let buttonDisabled = false;
-  
-  if (isOwner) {
-    if (item.status === 'Resolved') {
+  let canMessage = false;
+
+  // A user can message if:
+  // 1. They are the owner.
+  // 2. No conversation has started yet (!item.participants).
+  // 3. They are already part of the conversation.
+  if (isOwner || !item.participants || item.participants.includes(user.uid)) {
+    canMessage = true;
+  }
+
+  if (item.status === 'Resolved') {
       buttonText = 'Item Resolved';
       buttonDisabled = true;
-    } else {
-      buttonText = 'View Messages'; // Owner can always view messages
-    }
+  } else if (isOwner) {
+      buttonText = 'View Messages';
   } else { // Not the owner
-    if (item.status === 'Lost') {
-      buttonText = 'Contact Owner';
-    } else if (item.status === 'Found') {
-      buttonText = 'Contact Finder';
-    } else { // Resolved
-      buttonText = 'Item Resolved';
+      if (item.status === 'Lost') {
+          buttonText = 'Contact Owner';
+      } else if (item.status === 'Found') {
+          buttonText = 'Contact Finder';
+      }
+  }
+  
+  if (!canMessage && item.status !== 'Resolved') {
+      buttonText = 'Conversation in Progress';
       buttonDisabled = true;
-    }
   }
 
 
@@ -179,7 +207,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
                   >
                   <p className="text-sm">{msg.content}</p>
                   <p className={`text-xs mt-1 text-right ${msg.senderId === user.uid ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                      {msg.createdAt ? format(msg.createdAt.toDate(), 'p') : 'sending...'}
+                      {msg.createdAt?.toDate ? format(msg.createdAt.toDate(), 'p') : 'sending...'}
                   </p>
                   </div>
                   {msg.senderId === user.uid && (

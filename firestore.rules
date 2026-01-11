@@ -31,27 +31,24 @@ service cloud.firestore {
     }
     
     match /items/{itemId}/messages/{messageId} {
-        // This function is difficult to implement securely and efficiently in rules alone.
-        // It's better to manage participants on the client or with a Cloud Function.
-        // For this ruleset, we will rely on checking the participants list on the parent item.
-        function getMessageParticipants() {
-            return get(/databases/$(database)/documents/items/$(itemId)).data.participants;
+        // A user is a participant if their UID is in the item's `participants` array.
+        function isParticipant() {
+            return request.auth.uid in get(/databases/$(database)/documents/items/$(itemId)).data.participants;
         }
 
-        // READ: Allow if the user is one of the two participants stored on the item document.
-        allow list, get: if isSignedIn() && request.auth.uid in getMessageParticipants();
+        // READ: Allow if the user is a participant in the conversation.
+        allow list, get: if isSignedIn() && isParticipant();
 
         // CREATE: Allow a new message if...
         allow create: if isSignedIn() && 
                          request.resource.data.senderId == request.auth.uid &&
                          (
-                            // Scenario A: No participants yet (first message).
-                            // The client will need to add both users to the 'participants' array on the item.
-                            // This rule is optimistic. A Cloud Function would be more robust.
-                            !exists(/databases/$(database)/documents/items/$(itemId)/messages) ||
+                            // Scenario A: First message. The item has no participants array yet.
+                            // The client is responsible for creating this array with the first message.
+                            !('participants' in get(/databases/$(database)/documents/items/$(itemId)).data) ||
                             
-                            // Scenario B: Participants exist, so the sender must be one of them.
-                            request.auth.uid in getMessageParticipants()
+                            // Scenario B: Conversation exists. Sender must be a participant.
+                            isParticipant()
                          );
     }
   }

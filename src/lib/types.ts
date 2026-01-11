@@ -19,6 +19,7 @@ export type Item = {
     userId: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
+    participants?: string[];
   };
   
   export type Message = {
@@ -28,6 +29,7 @@ export type Item = {
     senderAvatarUrl: string;
     content: string;
     createdAt: Timestamp;
+    isFirstMessage?: boolean;
   };
 
   export type Conversation = {
