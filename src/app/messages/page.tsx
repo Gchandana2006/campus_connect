@@ -51,9 +51,8 @@ export default function MessagesPage() {
 
         const items = itemSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item));
         const messageUnsubscribes: (() => void)[] = [];
-        let processedCount = 0;
-
-        const convs: Conversation[] = [];
+        
+        let convs: Conversation[] = [];
 
         if (items.length === 0) {
             setConversations([]);
@@ -61,7 +60,7 @@ export default function MessagesPage() {
             return;
         }
         
-        items.forEach(item => {
+        items.forEach((item, itemIndex) => {
             const messagesQuery = query(
                 collection(firestore, `items/${item.id}/messages`),
                 orderBy('createdAt', 'desc'),
@@ -93,8 +92,8 @@ export default function MessagesPage() {
 
             messageUnsubscribes.push(unsubscribeMessages);
         });
-
-        // After setting up all message listeners for the initial item load
+        
+        // After setting up all message listeners
         setIsLoading(false);
         
         // Return a cleanup function that unsubscribes from all message listeners

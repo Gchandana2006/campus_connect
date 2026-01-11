@@ -42,7 +42,8 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const canViewMessages = isOwner || isParticipant;
 
   const messagesQuery = useMemoFirebase(() => {
-    // Only fetch messages if the user is logged in AND they are authorized to view them.
+    // Only construct the query if the user is authorized to view the messages.
+    // This prevents Firestore permission errors.
     if (!firestore || !item?.id || !user || !canViewMessages) {
         return null;
     }
@@ -89,11 +90,16 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
                 isFirstMessage: false
             };
 
-            // If this is the first message from a non-owner, set participants
+            // If this is the first interaction from a non-owner, set participants.
+            // This transactionally "locks" the conversation to these two users.
             if ((!currentItemData.participants || currentItemData.participants.length === 0) && user.uid !== item.userId) {
                 const participants = [item.userId, user.uid];
                 transaction.update(itemRef, { participants });
                 newMessage.isFirstMessage = true;
+            } else if (currentItemData.participants && !currentItemData.participants.includes(user.uid)) {
+                // If a conversation already has participants and this user isn't one of them, block the message.
+                // This is a client-side check that mirrors the security rules.
+                throw new Error("You cannot join this conversation.");
             }
 
             // Add the new message
@@ -172,13 +178,8 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
           </SheetHeader>
           <ScrollArea ref={scrollAreaRef} className="flex-grow my-4 pr-4 -mr-6">
           <div className="space-y-4">
-              {!canViewMessages && (
-                  <div className="text-center text-muted-foreground p-8">
-                      Start the conversation to see messages.
-                  </div>
-              )}
-              {canViewMessages && isLoadingMessages && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
-              {canViewMessages && messages?.map((msg) => (
+              {isLoadingMessages && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+              {messages?.map((msg) => (
               <div
                   key={msg.id}
                   className={`flex items-end gap-2 ${
@@ -211,7 +212,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
                   )}
               </div>
               ))}
-              {canViewMessages && !isLoadingMessages && messages?.length === 0 && (
+              {!isLoadingMessages && messages?.length === 0 && (
                   <div className="text-center text-muted-foreground p-8">
                       No messages yet. {isOwner ? 'Wait for someone to contact you.' : 'Start the conversation!'}
                   </div>
