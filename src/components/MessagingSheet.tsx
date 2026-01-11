@@ -80,7 +80,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
             const currentItemData = itemDoc.data() as Item;
 
             // Create the message payload
-            const newMessage = {
+            const newMessage: Omit<Message, 'id' | 'createdAt'> & { createdAt: any } = {
                 senderId: user.uid,
                 senderName: user.displayName || 'Campus User',
                 senderAvatarUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`,
@@ -148,7 +148,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   }
   
   // A third person cannot join an existing conversation that has started
-  if (item.participants && item.participants.length > 0 && !isParticipant) {
+  if (item.participants && item.participants.length > 1 && !isParticipant) {
       buttonText = 'Conversation in Progress';
       buttonDisabled = true;
   }
@@ -230,9 +230,9 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
               autoComplete="off" 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              disabled={isSending}
+              disabled={isSending || (isOwner && !isParticipant)}
               />
-              <Button type="submit" size="icon" disabled={isSending || !message.trim()}>
+              <Button type="submit" size="icon" disabled={isSending || !message.trim() || (isOwner && !isParticipant)}>
               {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               <span className="sr-only">Send</span>
               </Button>

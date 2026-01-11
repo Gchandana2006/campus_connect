@@ -22,6 +22,7 @@ export default function MessagesPage() {
 
   const involvedItemsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
+    // Query for items where the current user is a participant.
     return query(collection(firestore, 'items'), where('participants', 'array-contains', user.uid));
   }, [firestore, user?.uid]);
 
@@ -52,6 +53,7 @@ export default function MessagesPage() {
         if (itemsToProcess === 0) {
             setIsLoading(false);
             setConversations([]);
+            return; // Explicitly return
         }
 
         itemSnapshot.docs.forEach((itemDoc) => {
@@ -69,28 +71,31 @@ export default function MessagesPage() {
                  : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
 
                 conversationsData[itemData.id] = { item: itemData, lastMessage };
+                
+                // This logic is tricky. We check if all initial messages have been loaded.
+                const loadedCount = Object.keys(conversationsData).length;
+                if(itemsToProcess > 0 && loadedCount === itemsToProcess) {
+                     itemsToProcess = 0; // Mark initial load as complete
+                }
 
-                // A bit of a hack to know when we are done with the initial fetch
-                if (Object.keys(conversationsData).length === itemsToProcess) {
-                     const convos = Object.values(conversationsData).sort((a, b) => {
-                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
-                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
-                        return timeB - timeA;
-                    });
-                    setConversations(convos);
-                    setIsLoading(false);
-                    itemsToProcess = 0; // Prevent this block from running again
-                } else if (itemsToProcess === 0) { // This is for subsequent updates
+                // Update state on initial load completion or any subsequent update
+                if (itemsToProcess === 0) {
                     const convos = Object.values(conversationsData).sort((a, b) => {
                         const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
                         const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
                         return timeB - timeA;
                     });
                     setConversations(convos);
+                    setIsLoading(false);
                 }
+
             }, (error) => {
                  console.error(`Error fetching last message for item ${itemData.id}:`, error);
-                 itemsToProcess--;
+                 itemsToProcess--; // Decrement on error to avoid getting stuck
+                 if(itemsToProcess === 0 && Object.keys(conversationsData).length === 0){
+                    setIsLoading(false);
+                    setConversations([]);
+                 }
             });
             messageUnsubscribes.push(unsubMessages);
         });
