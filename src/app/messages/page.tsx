@@ -45,9 +45,14 @@ export default function MessagesPage() {
             return;
         }
 
-        const unsubscribesFromMessages: (()=>void)[] = [];
-        let processingCount = itemSnapshot.docs.length;
-        const convs: Conversation[] = [];
+        const conversationsData: { [itemId: string]: Conversation } = {};
+        const messageUnsubscribes: (() => void)[] = [];
+        let itemsToProcess = itemSnapshot.docs.length;
+
+        if (itemsToProcess === 0) {
+            setIsLoading(false);
+            setConversations([]);
+        }
 
         itemSnapshot.docs.forEach((itemDoc) => {
             const itemData = { id: itemDoc.id, ...itemDoc.data() } as Item;
@@ -63,38 +68,36 @@ export default function MessagesPage() {
                  ? null 
                  : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
 
-               const existingIndex = convs.findIndex(c => c.item.id === itemData.id);
-               if (existingIndex > -1) {
-                   convs[existingIndex].lastMessage = lastMessage;
-               } else {
-                   convs.push({ item: itemData, lastMessage });
-               }
-               
-               // Sort and set state once all initial listeners have fired at least once
-               if (processingCount > 0) {
-                   processingCount--;
-                   if (processingCount === 0) {
-                       const sorted = [...convs].sort((a, b) => {
-                           const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
-                           const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
-                           return timeB - timeA;
-                       });
-                       setConversations(sorted);
-                       setIsLoading(false);
-                   }
-               } else { // Subsequent updates
-                    const sorted = [...convs].sort((a, b) => {
-                           const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
-                           const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
-                           return timeB - timeA;
+                conversationsData[itemData.id] = { item: itemData, lastMessage };
+
+                // A bit of a hack to know when we are done with the initial fetch
+                if (Object.keys(conversationsData).length === itemsToProcess) {
+                     const convos = Object.values(conversationsData).sort((a, b) => {
+                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
+                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
+                        return timeB - timeA;
                     });
-                    setConversations(sorted);
-               }
+                    setConversations(convos);
+                    setIsLoading(false);
+                    itemsToProcess = 0; // Prevent this block from running again
+                } else if (itemsToProcess === 0) { // This is for subsequent updates
+                    const convos = Object.values(conversationsData).sort((a, b) => {
+                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
+                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
+                        return timeB - timeA;
+                    });
+                    setConversations(convos);
+                }
+            }, (error) => {
+                 console.error(`Error fetching last message for item ${itemData.id}:`, error);
+                 itemsToProcess--;
             });
-            unsubscribesFromMessages.push(unsubMessages);
+            messageUnsubscribes.push(unsubMessages);
         });
 
-        return () => unsubscribesFromMessages.forEach(unsub => unsub());
+        return () => {
+            messageUnsubscribes.forEach(unsub => unsub());
+        };
     }, (error) => {
         console.error("Error fetching conversations: ", error);
         setIsLoading(false);

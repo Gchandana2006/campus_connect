@@ -38,7 +38,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.uid === item.userId;
-  const isParticipant = !!user && item.participants?.includes(user.uid);
+  const isParticipant = !!user && !!item.participants && item.participants.includes(user.uid);
   const canViewMessages = isOwner || isParticipant;
 
   const messagesQuery = useMemoFirebase(() => {
