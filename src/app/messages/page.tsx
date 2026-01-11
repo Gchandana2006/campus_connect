@@ -53,10 +53,8 @@ export default function MessagesPage() {
 
         const items = itemSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item));
         const newConversations: { [key: string]: Conversation } = {};
-        let expectedConversations = items.length;
-        let loadedConversations = 0;
         
-        // Unsubscribe functions for message listeners
+        // This array will hold all the unsubscribe functions for the message listeners
         const messageUnsubscribes: (() => void)[] = [];
         
         if (items.length === 0) {
@@ -64,7 +62,9 @@ export default function MessagesPage() {
             setIsLoading(false);
             return;
         }
-        
+
+        let processedItems = 0;
+
         items.forEach((item) => {
             const messagesQuery = query(
                 collection(firestore, `items/${item.id}/messages`),
@@ -76,11 +76,10 @@ export default function MessagesPage() {
                 const lastMessage = messageSnapshot.empty ? null : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
                 
                 newConversations[item.id] = { item, lastMessage };
-                loadedConversations++;
 
-                // Update state only when all conversations have been processed at least once
-                // Or when an update for an existing conversation comes in
-                if (loadedConversations >= expectedConversations || conversations.some(c => c.item.id === item.id)) {
+                // Only update the state once all items have been processed at least once
+                // or if it's an update to an existing conversation
+                if (Object.keys(newConversations).length === items.length) {
                      const sortedConvs = Object.values(newConversations).sort((a, b) => {
                         const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
                         const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
@@ -95,8 +94,11 @@ export default function MessagesPage() {
 
             messageUnsubscribes.push(unsubscribeMsg);
         });
-        
-        setIsLoading(false);
+
+        // This is a one-time operation after setting up listeners
+        if (items.length > 0) {
+           setIsLoading(false);
+        }
         
         // Return a cleanup function that unsubscribes from all listeners
         return () => {
