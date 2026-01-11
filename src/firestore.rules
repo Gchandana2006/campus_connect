@@ -1,0 +1,55 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    match /items/{itemId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        request.resource.data.status == 'Resolved' ||
+        'participants' in request.resource.data
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+    }
+    
+    match /items/{itemId}/messages/{messageId} {
+        // A user is a participant if their UID is in the item's `participants` array.
+        function isParticipant() {
+            return isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/items/$(itemId)).data.participants;
+        }
+
+        // READ: Allow if the user is a participant in the conversation.
+        allow list, get: if isParticipant();
+
+        // CREATE: Allow a new message if...
+        allow create: if isSignedIn() && 
+                         request.resource.data.senderId == request.auth.uid &&
+                         (
+                            // Scenario A: First message from a non-owner. 
+                            // The client is responsible for creating the `participants` array.
+                            !('participants' in get(/databases/$(database)/documents/items/$(itemId)).data) &&
+                            request.auth.uid != get(/databases/$(database)/documents/items/$(itemId)).data.userId
+                            ||
+                            // Scenario B: Conversation exists. Sender must be a participant.
+                            isParticipant()
+                         );
+    }
+  }
+}

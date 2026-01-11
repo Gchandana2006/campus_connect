@@ -37,17 +37,17 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const [isSending, setIsSending] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  const isOwner = user?.uid === item.userId;
+  const isParticipant = item.participants?.includes(user?.uid || '');
 
   const messagesQuery = useMemoFirebase(() => {
-    // Only fetch messages if the user is logged in
-    if (!firestore || !item?.id || !user) return null;
-    // And if the user is a participant (or the item has no participants yet, for the owner)
-    if (item.participants && !item.participants.includes(user.uid)) {
-        if (user.uid !== item.userId) return null;
+    // Only fetch messages if the user is logged in AND they are a participant (or owner)
+    if (!firestore || !item?.id || !user || (!isOwner && !isParticipant)) {
+        return null;
     }
     
     return query(collection(firestore, `items/${item.id}/messages`), orderBy('createdAt', 'asc'));
-  }, [firestore, item, user]);
+  }, [firestore, item.id, item.participants, user, isOwner, isParticipant]);
 
   const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
   
@@ -61,8 +61,6 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   }, [messages]);
 
   const posterName = item?.user?.name || 'the poster';
-  
-  const isOwner = user?.uid === item.userId;
 
   const handleSendMessage = async () => {
     if (!message.trim() || !user || !firestore) return;
@@ -90,8 +88,8 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
                 isFirstMessage: false
             };
 
-            // If this is the first message, set the participants array
-            if (!currentItemData.participants || currentItemData.participants.length === 0) {
+            // If this is the first message from a non-owner, set participants
+            if ((!currentItemData.participants || currentItemData.participants.length === 0) && user.uid !== item.userId) {
                 const participants = [item.userId, user.uid];
                 transaction.update(itemRef, { participants });
                 newMessage.isFirstMessage = true;
@@ -133,40 +131,29 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
       </Button>
     );
   }
-
+  
   // Logic for button text and state when user is logged in
-  let buttonText: string;
+  let buttonText: string = 'Contact';
   let buttonDisabled = false;
-  let canMessage = false;
-
-  // A user can message if:
-  // 1. They are the owner.
-  // 2. No conversation has started yet (!item.participants).
-  // 3. They are already part of the conversation.
-  if (isOwner || !item.participants || item.participants.includes(user.uid)) {
-    canMessage = true;
-  }
 
   if (item.status === 'Resolved') {
       buttonText = 'Item Resolved';
       buttonDisabled = true;
   } else if (isOwner) {
       buttonText = 'View Messages';
-  } else { // Not the owner
-      if (item.status === 'Lost') {
-          buttonText = 'Contact Owner';
-      } else if (item.status === 'Found') {
-          buttonText = 'Contact Finder';
-      }
+  } else {
+      if (item.status === 'Lost') buttonText = 'Contact Owner';
+      if (item.status === 'Found') buttonText = 'Contact Finder';
   }
   
-  if (!canMessage && item.status !== 'Resolved') {
+  // A third person cannot join an existing conversation
+  if (item.participants && item.participants.length > 0 && !isParticipant) {
       buttonText = 'Conversation in Progress';
       buttonDisabled = true;
   }
 
 
-  // Otherwise, render the messaging sheet for the user
+  // Render the messaging sheet for the user
   return (
     <Sheet>
       <SheetTrigger asChild>

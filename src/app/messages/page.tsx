@@ -3,9 +3,9 @@
 'use client';
 
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, getDocs, orderBy, limit, onSnapshot, collectionGroup } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import type { Item, Conversation, Message } from '@/lib/types';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,6 +22,7 @@ export default function MessagesPage() {
 
   const involvedItemsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
+    // Query for items where the current user is a participant.
     return query(collection(firestore, 'items'), where('participants', 'array-contains', user.uid));
   }, [firestore, user?.uid]);
 
@@ -33,52 +34,51 @@ export default function MessagesPage() {
     }
     if (!involvedItemsQuery) {
         setIsLoading(false);
+        setConversations([]);
         return;
     }
 
     setIsLoading(true);
+    // Listen to changes in items where the user is a participant
     const unsubscribeFromItems = onSnapshot(involvedItemsQuery, (itemSnapshot) => {
         if (itemSnapshot.empty) {
             setIsLoading(false);
             setConversations([]);
+            return;
         }
 
-        const unsubscribes: (()=>void)[] = [];
+        const unsubscribesFromMessages: (()=>void)[] = [];
+        const newConversations: { [itemId: string]: Conversation } = {};
 
-        itemSnapshot.docs.forEach(itemDoc => {
+        itemSnapshot.docs.forEach((itemDoc, index) => {
             const itemData = { id: itemDoc.id, ...itemDoc.data() } as Item;
-
+            
+            // For each item, get the last message to display in the conversation list.
             const messagesQuery = query(collection(firestore, `items/${itemDoc.id}/messages`), orderBy('createdAt', 'desc'), limit(1));
             
             const unsubMessages = onSnapshot(messagesQuery, (messageSnapshot) => {
                const lastMessage = messageSnapshot.empty ? null : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
 
-               setConversations(prev => {
-                  const existingIndex = prev.findIndex(c => c.item.id === itemDoc.id);
-                  const newConversation: Conversation = { item: itemData, lastMessage };
-
-                  let newConversations;
-                  if (existingIndex > -1) {
-                      newConversations = [...prev];
-                      newConversations[existingIndex] = newConversation;
-                  } else {
-                      newConversations = [...prev, newConversation];
-                  }
-                  
-                  // Sort by last message date, or item creation date if no message
-                  return newConversations.sort((a, b) => {
-                      const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt.toDate().getTime();
-                      const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt.toDate().getTime();
-                      return timeB - timeA;
-                  });
-               });
-               setIsLoading(false);
+               newConversations[itemDoc.id] = { item: itemData, lastMessage };
+               
+               // Update state once all messages for the current batch of items are processed.
+               if (Object.keys(newConversations).length === itemSnapshot.size) {
+                    const sortedConversations = Object.values(newConversations).sort((a, b) => {
+                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt.toDate().getTime();
+                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt.toDate().getTime();
+                        return timeB - timeA;
+                    });
+                    setConversations(sortedConversations);
+                    setIsLoading(false);
+               }
             });
-            unsubscribes.push(unsubMessages);
+            unsubscribesFromMessages.push(unsubMessages);
         });
 
-        // This is to clean up listeners when the parent item query changes
-        return () => unsubscribes.forEach(unsub => unsub());
+        return () => unsubscribesFromMessages.forEach(unsub => unsub());
+    }, (error) => {
+        console.error("Error fetching conversations: ", error);
+        setIsLoading(false);
     });
 
     return () => {
@@ -137,10 +137,16 @@ export default function MessagesPage() {
                                     <div className="flex-grow overflow-hidden">
                                         <div className="flex justify-between items-start">
                                             <p className="font-semibold truncate">{item.name}</p>
-                                            {lastMessage?.createdAt?.toDate() && (
+                                            {lastMessage?.createdAt?.toDate() ? (
                                                 <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">
                                                     {formatDistanceToNow(lastMessage.createdAt.toDate(), {addSuffix: true})}
                                                 </p>
+                                            ) : (
+                                              item.createdAt?.toDate() && (
+                                                <p className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                                                    {formatDistanceToNow(item.createdAt.toDate(), {addSuffix: true})}
+                                                </p>
+                                              )
                                             )}
                                         </div>
                                         <p className="text-sm text-muted-foreground line-clamp-1">
