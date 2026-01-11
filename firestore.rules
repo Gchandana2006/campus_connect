@@ -33,7 +33,8 @@ service cloud.firestore {
     // A user can read messages if they own the item OR have sent a message.
     // This allows both parties in a conversation to see it.
     match /items/{itemId}/messages/{messageId} {
-        // Anyone signed in can list messages, but content is protected by 'get'.
+        // Only the item owner or a message participant should be able to list messages.
+        // The query from the client MUST include a where clause to enforce this.
         allow list: if isSignedIn();
         
         // To read a specific message, you must be the item owner or the sender of that message.

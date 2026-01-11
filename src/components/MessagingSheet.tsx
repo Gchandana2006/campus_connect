@@ -161,7 +161,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
               <div
                   key={msg.id}
                   className={`flex items-end gap-2 ${
-                  msg.senderId === user.uid ? 'justify-end' : ''
+                  msg.senderId === user.uid ? 'justify-end' : 'justify-start'
                   }`}
               >
                   {msg.senderId !== user.uid && (
@@ -178,7 +178,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
                   }`}
                   >
                   <p className="text-sm">{msg.content}</p>
-                  <p className={`text-xs mt-1 ${msg.senderId === user.uid ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                  <p className={`text-xs mt-1 text-right ${msg.senderId === user.uid ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                       {msg.createdAt ? format(msg.createdAt.toDate(), 'p') : 'sending...'}
                   </p>
                   </div>
