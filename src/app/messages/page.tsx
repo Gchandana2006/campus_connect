@@ -22,12 +22,14 @@ export default function MessagesPage() {
 
   const involvedItemsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
-    // Query for items where the current user is a participant.
     return query(collection(firestore, 'items'), where('participants', 'array-contains', user.uid));
   }, [firestore, user?.uid]);
 
   useEffect(() => {
-    if (isUserLoading) return;
+    if (isUserLoading) {
+        setIsLoading(true);
+        return;
+    };
     if (!user) {
       router.push('/login');
       return;
@@ -39,78 +41,76 @@ export default function MessagesPage() {
     }
 
     setIsLoading(true);
-    const unsubscribeFromItems = onSnapshot(involvedItemsQuery, (itemSnapshot) => {
+    // Main listener for all items the user is a participant in.
+    const unsubscribeItems = onSnapshot(involvedItemsQuery, (itemSnapshot) => {
         if (itemSnapshot.empty) {
-            setIsLoading(false);
             setConversations([]);
+            setIsLoading(false);
             return;
         }
 
-        const conversationsData: { [itemId: string]: Conversation } = {};
+        const items = itemSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item));
         const messageUnsubscribes: (() => void)[] = [];
-        let itemsToProcess = itemSnapshot.docs.length;
+        let processedCount = 0;
 
-        if (itemsToProcess === 0) {
-            setIsLoading(false);
+        const convs: Conversation[] = [];
+
+        if (items.length === 0) {
             setConversations([]);
-            return; // Explicitly return
+            setIsLoading(false);
+            return;
         }
-
-        itemSnapshot.docs.forEach((itemDoc) => {
-            const itemData = { id: itemDoc.id, ...itemDoc.data() } as Item;
-            
+        
+        items.forEach(item => {
             const messagesQuery = query(
-                collection(firestore, `items/${itemDoc.id}/messages`), 
-                orderBy('createdAt', 'desc'), 
+                collection(firestore, `items/${item.id}/messages`),
+                orderBy('createdAt', 'desc'),
                 limit(1)
             );
-            
-            const unsubMessages = onSnapshot(messagesQuery, (messageSnapshot) => {
-               const lastMessage = messageSnapshot.empty 
-                 ? null 
-                 : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
 
-                conversationsData[itemData.id] = { item: itemData, lastMessage };
+            const unsubscribeMessages = onSnapshot(messagesQuery, (messageSnapshot) => {
+                const lastMessage = messageSnapshot.empty ? null : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
                 
-                // This logic is tricky. We check if all initial messages have been loaded.
-                const loadedCount = Object.keys(conversationsData).length;
-                if(itemsToProcess > 0 && loadedCount === itemsToProcess) {
-                     itemsToProcess = 0; // Mark initial load as complete
+                // Find and update or add the conversation
+                const existingIndex = convs.findIndex(c => c.item.id === item.id);
+                if (existingIndex > -1) {
+                    convs[existingIndex].lastMessage = lastMessage;
+                } else {
+                    convs.push({ item, lastMessage });
                 }
 
-                // Update state on initial load completion or any subsequent update
-                if (itemsToProcess === 0) {
-                    const convos = Object.values(conversationsData).sort((a, b) => {
-                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
-                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
-                        return timeB - timeA;
-                    });
-                    setConversations(convos);
-                    setIsLoading(false);
-                }
-
+                // This logic runs every time a last message updates.
+                // We sort and set the state to ensure the UI is always up-to-date.
+                const sortedConvs = [...convs].sort((a, b) => {
+                    const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
+                    const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
+                    return timeB - timeA;
+                });
+                setConversations(sortedConvs);
             }, (error) => {
-                 console.error(`Error fetching last message for item ${itemData.id}:`, error);
-                 itemsToProcess--; // Decrement on error to avoid getting stuck
-                 if(itemsToProcess === 0 && Object.keys(conversationsData).length === 0){
-                    setIsLoading(false);
-                    setConversations([]);
-                 }
+                console.error(`Error fetching last message for item ${item.id}:`, error);
             });
-            messageUnsubscribes.push(unsubMessages);
+
+            messageUnsubscribes.push(unsubscribeMessages);
         });
 
+        // After setting up all message listeners for the initial item load
+        setIsLoading(false);
+        
+        // Return a cleanup function that unsubscribes from all message listeners
         return () => {
             messageUnsubscribes.forEach(unsub => unsub());
         };
+
     }, (error) => {
         console.error("Error fetching conversations: ", error);
         setIsLoading(false);
     });
 
     return () => {
-        if (unsubscribeFromItems) unsubscribeFromItems();
+        if (unsubscribeItems) unsubscribeItems();
     };
+
   }, [user, isUserLoading, firestore, router, involvedItemsQuery]);
 
 
