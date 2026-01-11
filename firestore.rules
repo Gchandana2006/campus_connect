@@ -13,8 +13,19 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    function isItemOwner(itemId) {
-      return isSignedIn() && get(/databases/$(database)/documents/items/$(itemId)).data.userId == request.auth.uid;
+    function getItemOwnerId(itemId) {
+        return get(/databases/$(database)/documents/items/$(itemId)).data.userId;
+    }
+    
+    // Check if the user is one of the two participants in a conversation.
+    function isConversationParticipant(itemId) {
+        let ownerId = getItemOwnerId(itemId);
+        let participants = get(/databases/$(database)/documents/items/$(itemId)/messages, {}).data.keys();
+        
+        // This is tricky in rules. A better way is to check senderId's
+        // This is a placeholder for a more complex rule logic that would need a transaction or a Cloud Function to be perfect.
+        // For now, we will rely on read/list rules for primary security.
+        return request.auth.uid == ownerId;
     }
 
     match /items/{itemId} {
@@ -30,18 +41,42 @@ service cloud.firestore {
       allow update: if isOwner(userId);
     }
     
-    // A user can read messages if they own the item OR have sent a message.
-    // This allows both parties in a conversation to see it.
     match /items/{itemId}/messages/{messageId} {
-        // Only the item owner or a message participant should be able to list messages.
-        // The query from the client MUST include a where clause to enforce this.
-        allow list: if isSignedIn();
-        
-        // To read a specific message, you must be the item owner or the sender of that message.
-        allow get: if isItemOwner(itemId) || (isSignedIn() && resource.data.senderId == request.auth.uid);
-        
-        // Anyone signed in can send a message.
-        allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid;
+        function getMessageParticipants() {
+            // Get all documents (messages) in the collection. This has a cost.
+            // In a real high-traffic app, you might store participants on the parent item doc.
+            let messages = get(/databases/$(database)/documents/items/$(itemId)/messages, {}).data;
+            let ownerId = getItemOwnerId(itemId);
+            // Create a list of unique sender IDs from all messages.
+            let participantIds = [ownerId]; // Start with the owner
+            participantIds = participantIds.concat(messages.keys().map(key => messages[key].senderId));
+            
+            // Return a list of unique participants
+            return participantIds;
+        }
+
+        // READ: You can read messages if you are the item owner or your ID is in the list of participants.
+        allow list, get: if request.auth.uid == getItemOwnerId(itemId) || request.auth.uid in getMessageParticipants();
+
+        // CREATE: You can create a message if:
+        // 1. You are signed in.
+        // 2. The conversation has at most one non-owner participant.
+        // 3. You are either the owner or that one participant.
+        allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid &&
+                         (
+                            // Scenario A: No messages exist yet. Anyone can start.
+                            !exists(/databases/$(database)/documents/items/$(itemId)/messages) ||
+                            (
+                                // Scenario B: Messages exist. Check participants.
+                                let participants = getMessageParticipants();
+                                // Remove the owner to count external participants
+                                let externalParticipants = participants.filter(p => p != getItemOwnerId(itemId));
+                                
+                                // Allow if there's only one external participant and the sender is that person,
+                                // OR if there are no external participants yet.
+                                (externalParticipants.size() <= 1 && request.auth.uid in participants) || externalParticipants.size() == 0
+                            )
+                         );
     }
   }
 }
