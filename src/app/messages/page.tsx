@@ -20,6 +20,8 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // This query is now secure. It only fetches items where the current user's
+  // UID is in the `participants` array, which is controlled by security rules.
   const involvedItemsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'items'), where('participants', 'array-contains', user.uid));
@@ -50,53 +52,53 @@ export default function MessagesPage() {
         }
 
         const items = itemSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Item));
+        const newConversations: { [key: string]: Conversation } = {};
+        let expectedConversations = items.length;
+        let loadedConversations = 0;
+        
+        // Unsubscribe functions for message listeners
         const messageUnsubscribes: (() => void)[] = [];
         
-        let convs: Conversation[] = [];
-
         if (items.length === 0) {
             setConversations([]);
             setIsLoading(false);
             return;
         }
         
-        items.forEach((item, itemIndex) => {
+        items.forEach((item) => {
             const messagesQuery = query(
                 collection(firestore, `items/${item.id}/messages`),
                 orderBy('createdAt', 'desc'),
                 limit(1)
             );
 
-            const unsubscribeMessages = onSnapshot(messagesQuery, (messageSnapshot) => {
+            const unsubscribeMsg = onSnapshot(messagesQuery, (messageSnapshot) => {
                 const lastMessage = messageSnapshot.empty ? null : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
                 
-                // Find and update or add the conversation
-                const existingIndex = convs.findIndex(c => c.item.id === item.id);
-                if (existingIndex > -1) {
-                    convs[existingIndex].lastMessage = lastMessage;
-                } else {
-                    convs.push({ item, lastMessage });
-                }
+                newConversations[item.id] = { item, lastMessage };
+                loadedConversations++;
 
-                // This logic runs every time a last message updates.
-                // We sort and set the state to ensure the UI is always up-to-date.
-                const sortedConvs = [...convs].sort((a, b) => {
-                    const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
-                    const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
-                    return timeB - timeA;
-                });
-                setConversations(sortedConvs);
+                // Update state only when all conversations have been processed at least once
+                // Or when an update for an existing conversation comes in
+                if (loadedConversations >= expectedConversations || conversations.some(c => c.item.id === item.id)) {
+                     const sortedConvs = Object.values(newConversations).sort((a, b) => {
+                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
+                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
+                        return timeB - timeA;
+                    });
+                    setConversations(sortedConvs);
+                }
             }, (error) => {
                 console.error(`Error fetching last message for item ${item.id}:`, error);
+                // Handle individual message fetch errors if necessary
             });
 
-            messageUnsubscribes.push(unsubscribeMessages);
+            messageUnsubscribes.push(unsubscribeMsg);
         });
         
-        // After setting up all message listeners
         setIsLoading(false);
         
-        // Return a cleanup function that unsubscribes from all message listeners
+        // Return a cleanup function that unsubscribes from all listeners
         return () => {
             messageUnsubscribes.forEach(unsub => unsub());
         };

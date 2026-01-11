@@ -38,18 +38,23 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.uid === item.userId;
-  const isParticipant = !!user && !!item.participants && item.participants.includes(user.uid);
+  // A user is a participant if their ID is in the item's participants array.
+  // Note that the `participants` array may not exist on old items.
+  const isParticipant = user ? !!item.participants?.includes(user.uid) : false;
+
   const canViewMessages = isOwner || isParticipant;
 
   const messagesQuery = useMemoFirebase(() => {
     // Only construct the query if the user is authorized to view the messages.
-    // This prevents Firestore permission errors.
-    if (!firestore || !item?.id || !user || !canViewMessages) {
+    // This is the CRITICAL part of the fix. If canViewMessages is false, this
+    // hook will receive `null` and will not attempt to fetch the collection,
+    // thus preventing the permission error.
+    if (!firestore || !item?.id || !canViewMessages) {
         return null;
     }
     
     return query(collection(firestore, `items/${item.id}/messages`), orderBy('createdAt', 'asc'));
-  }, [firestore, item.id, user, canViewMessages]);
+  }, [firestore, item.id, canViewMessages]);
 
   const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
   
