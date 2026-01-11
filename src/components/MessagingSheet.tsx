@@ -38,16 +38,17 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const isOwner = user?.uid === item.userId;
-  const isParticipant = item.participants?.includes(user?.uid || '');
+  const isParticipant = !!user && item.participants?.includes(user.uid);
+  const canViewMessages = isOwner || isParticipant;
 
   const messagesQuery = useMemoFirebase(() => {
-    // Only fetch messages if the user is logged in AND they are a participant (or owner)
-    if (!firestore || !item?.id || !user || (!isOwner && !isParticipant)) {
+    // Only fetch messages if the user is logged in AND they are authorized to view them.
+    if (!firestore || !item?.id || !user || !canViewMessages) {
         return null;
     }
     
     return query(collection(firestore, `items/${item.id}/messages`), orderBy('createdAt', 'asc'));
-  }, [firestore, item.id, item.participants, user, isOwner, isParticipant]);
+  }, [firestore, item.id, user, canViewMessages]);
 
   const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
   
@@ -114,9 +115,9 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
 
   // Determine button text when user is logged out
   const getLoggedOutButtonText = () => {
-    if (item.status === 'Lost') return 'Contact Owner'; // Someone lost an item, contact them
-    if (item.status === 'Found') return 'Contact Finder'; // Someone found an item, contact them
-    return 'View Details'; // Fallback for resolved or other statuses
+    if (item.status === 'Lost') return 'Contact Owner';
+    if (item.status === 'Found') return 'Contact Finder';
+    return 'View Details';
   };
 
 
@@ -146,7 +147,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
       if (item.status === 'Found') buttonText = 'Contact Finder';
   }
   
-  // A third person cannot join an existing conversation
+  // A third person cannot join an existing conversation that has started
   if (item.participants && item.participants.length > 0 && !isParticipant) {
       buttonText = 'Conversation in Progress';
       buttonDisabled = true;
@@ -171,8 +172,13 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
           </SheetHeader>
           <ScrollArea ref={scrollAreaRef} className="flex-grow my-4 pr-4 -mr-6">
           <div className="space-y-4">
-              {isLoadingMessages && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
-              {messages?.map((msg) => (
+              {!canViewMessages && (
+                  <div className="text-center text-muted-foreground p-8">
+                      Start the conversation to see messages.
+                  </div>
+              )}
+              {canViewMessages && isLoadingMessages && <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+              {canViewMessages && messages?.map((msg) => (
               <div
                   key={msg.id}
                   className={`flex items-end gap-2 ${
@@ -205,7 +211,7 @@ export function MessagingSheet({ item }: MessagingSheetProps) {
                   )}
               </div>
               ))}
-              {!isLoadingMessages && messages?.length === 0 && (
+              {canViewMessages && !isLoadingMessages && messages?.length === 0 && (
                   <div className="text-center text-muted-foreground p-8">
                       No messages yet. {isOwner ? 'Wait for someone to contact you.' : 'Start the conversation!'}
                   </div>

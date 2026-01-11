@@ -22,7 +22,6 @@ export default function MessagesPage() {
 
   const involvedItemsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
-    // Query for items where the current user is a participant.
     return query(collection(firestore, 'items'), where('participants', 'array-contains', user.uid));
   }, [firestore, user?.uid]);
 
@@ -39,7 +38,6 @@ export default function MessagesPage() {
     }
 
     setIsLoading(true);
-    // Listen to changes in items where the user is a participant
     const unsubscribeFromItems = onSnapshot(involvedItemsQuery, (itemSnapshot) => {
         if (itemSnapshot.empty) {
             setIsLoading(false);
@@ -48,28 +46,49 @@ export default function MessagesPage() {
         }
 
         const unsubscribesFromMessages: (()=>void)[] = [];
-        const newConversations: { [itemId: string]: Conversation } = {};
+        let processingCount = itemSnapshot.docs.length;
+        const convs: Conversation[] = [];
 
-        itemSnapshot.docs.forEach((itemDoc, index) => {
+        itemSnapshot.docs.forEach((itemDoc) => {
             const itemData = { id: itemDoc.id, ...itemDoc.data() } as Item;
             
-            // For each item, get the last message to display in the conversation list.
-            const messagesQuery = query(collection(firestore, `items/${itemDoc.id}/messages`), orderBy('createdAt', 'desc'), limit(1));
+            const messagesQuery = query(
+                collection(firestore, `items/${itemDoc.id}/messages`), 
+                orderBy('createdAt', 'desc'), 
+                limit(1)
+            );
             
             const unsubMessages = onSnapshot(messagesQuery, (messageSnapshot) => {
-               const lastMessage = messageSnapshot.empty ? null : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
+               const lastMessage = messageSnapshot.empty 
+                 ? null 
+                 : { id: messageSnapshot.docs[0].id, ...messageSnapshot.docs[0].data() } as Message;
 
-               newConversations[itemDoc.id] = { item: itemData, lastMessage };
+               const existingIndex = convs.findIndex(c => c.item.id === itemData.id);
+               if (existingIndex > -1) {
+                   convs[existingIndex].lastMessage = lastMessage;
+               } else {
+                   convs.push({ item: itemData, lastMessage });
+               }
                
-               // Update state once all messages for the current batch of items are processed.
-               if (Object.keys(newConversations).length === itemSnapshot.size) {
-                    const sortedConversations = Object.values(newConversations).sort((a, b) => {
-                        const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt.toDate().getTime();
-                        const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt.toDate().getTime();
-                        return timeB - timeA;
+               // Sort and set state once all initial listeners have fired at least once
+               if (processingCount > 0) {
+                   processingCount--;
+                   if (processingCount === 0) {
+                       const sorted = [...convs].sort((a, b) => {
+                           const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
+                           const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
+                           return timeB - timeA;
+                       });
+                       setConversations(sorted);
+                       setIsLoading(false);
+                   }
+               } else { // Subsequent updates
+                    const sorted = [...convs].sort((a, b) => {
+                           const timeA = a.lastMessage?.createdAt?.toDate()?.getTime() || a.item.createdAt?.toDate()?.getTime() || 0;
+                           const timeB = b.lastMessage?.createdAt?.toDate()?.getTime() || b.item.createdAt?.toDate()?.getTime() || 0;
+                           return timeB - timeA;
                     });
-                    setConversations(sortedConversations);
-                    setIsLoading(false);
+                    setConversations(sorted);
                }
             });
             unsubscribesFromMessages.push(unsubMessages);
