@@ -93,6 +93,13 @@
             "type": "string",
             "format": "date-time",
             "description": "Timestamp when the item was last updated."
+        },
+        "participants": {
+          "type": "array",
+          "description": "An array containing the UIDs of the two participants in the conversation.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -139,6 +146,10 @@
           "type": "string",
           "description": "The date and time when the message was sent.",
           "format": "date-time"
+        },
+        "isFirstMessage": {
+          "type": "boolean",
+          "description": "Indicates if this is the first message in the conversation."
         }
       },
       "required": [
@@ -157,30 +168,23 @@
     ]
   },
   "firestore": {
-    "collections": [
-        {
-            "name": "items",
-            "schema": {
-              "$ref": "#/entities/Item"
-            },
-            "description": "Stores all lost and found items.",
-            "subcollections": [
-                {
-                    "name": "messages",
-                    "schema": {
-                        "$ref": "#/entities/Message"
-                    },
-                    "description": "Stores messages related to a specific item."
-                }
-            ]
-        },
-        {
-            "name": "users",
-            "schema": {
-                "$ref": "#/entities/User"
-            },
-            "description": "Stores user profiles."
-        }
-    ]
+    "/items/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/Item"
+      },
+      "description": "Stores all lost and found items."
+    },
+    "/items/{itemId}/messages/{messageId}": {
+      "schema": {
+        "$ref": "#/entities/Message"
+      },
+      "description": "Stores messages related to a specific item."
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores user profiles."
+    }
   }
 }

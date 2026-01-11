@@ -17,17 +17,6 @@ service cloud.firestore {
         return get(/databases/$(database)/documents/items/$(itemId)).data.userId;
     }
     
-    // Check if the user is one of the two participants in a conversation.
-    function isConversationParticipant(itemId) {
-        let ownerId = getItemOwnerId(itemId);
-        let participants = get(/databases/$(database)/documents/items/$(itemId)/messages, {}).data.keys();
-        
-        // This is tricky in rules. A better way is to check senderId's
-        // This is a placeholder for a more complex rule logic that would need a transaction or a Cloud Function to be perfect.
-        // For now, we will rely on read/list rules for primary security.
-        return request.auth.uid == ownerId;
-    }
-
     match /items/{itemId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -42,40 +31,27 @@ service cloud.firestore {
     }
     
     match /items/{itemId}/messages/{messageId} {
+        // This function is difficult to implement securely and efficiently in rules alone.
+        // It's better to manage participants on the client or with a Cloud Function.
+        // For this ruleset, we will rely on checking the participants list on the parent item.
         function getMessageParticipants() {
-            // Get all documents (messages) in the collection. This has a cost.
-            // In a real high-traffic app, you might store participants on the parent item doc.
-            let messages = get(/databases/$(database)/documents/items/$(itemId)/messages, {}).data;
-            let ownerId = getItemOwnerId(itemId);
-            // Create a list of unique sender IDs from all messages.
-            let participantIds = [ownerId]; // Start with the owner
-            participantIds = participantIds.concat(messages.keys().map(key => messages[key].senderId));
-            
-            // Return a list of unique participants
-            return participantIds;
+            return get(/databases/$(database)/documents/items/$(itemId)).data.participants;
         }
 
-        // READ: You can read messages if you are the item owner or your ID is in the list of participants.
-        allow list, get: if request.auth.uid == getItemOwnerId(itemId) || request.auth.uid in getMessageParticipants();
+        // READ: Allow if the user is one of the two participants stored on the item document.
+        allow list, get: if isSignedIn() && request.auth.uid in getMessageParticipants();
 
-        // CREATE: You can create a message if:
-        // 1. You are signed in.
-        // 2. The conversation has at most one non-owner participant.
-        // 3. You are either the owner or that one participant.
-        allow create: if isSignedIn() && request.resource.data.senderId == request.auth.uid &&
+        // CREATE: Allow a new message if...
+        allow create: if isSignedIn() && 
+                         request.resource.data.senderId == request.auth.uid &&
                          (
-                            // Scenario A: No messages exist yet. Anyone can start.
+                            // Scenario A: No participants yet (first message).
+                            // The client will need to add both users to the 'participants' array on the item.
+                            // This rule is optimistic. A Cloud Function would be more robust.
                             !exists(/databases/$(database)/documents/items/$(itemId)/messages) ||
-                            (
-                                // Scenario B: Messages exist. Check participants.
-                                let participants = getMessageParticipants();
-                                // Remove the owner to count external participants
-                                let externalParticipants = participants.filter(p => p != getItemOwnerId(itemId));
-                                
-                                // Allow if there's only one external participant and the sender is that person,
-                                // OR if there are no external participants yet.
-                                (externalParticipants.size() <= 1 && request.auth.uid in participants) || externalParticipants.size() == 0
-                            )
+                            
+                            // Scenario B: Participants exist, so the sender must be one of them.
+                            request.auth.uid in getMessageParticipants()
                          );
     }
   }
