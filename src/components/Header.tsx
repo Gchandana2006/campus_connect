@@ -23,10 +23,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PostItemDialog } from './PostItemDialog';
 import { Logo } from './icons/Logo';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { doc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 
 type UserProfile = {
   avatarDataUrl?: string;
@@ -42,6 +43,7 @@ const navLinks = [
 export default function Header() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const auth = useAuth();
   const pathname = usePathname();
 
   const userDocRef = useMemoFirebase(() => {
@@ -52,13 +54,9 @@ export default function Header() {
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
 
   const handleLogout = () => {
-    // This assumes you have access to the auth instance to sign out.
-    // This might need to be adjusted based on your Firebase setup.
-    // e.g., if useAuth() hook provides auth, use it here.
-    // For now, we'll assume a global auth instance or similar.
-    // import { getAuth } from 'firebase/auth';
-    // getAuth().signOut();
-    console.log('Logout action');
+    if (auth) {
+      signOut(auth);
+    }
   };
 
   const isLoading = isUserLoading || isProfileLoading;
